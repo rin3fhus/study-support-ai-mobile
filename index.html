@@ -1652,7 +1652,7 @@ function nextQuizItem() {
    画面の描画とナビゲーション
    ============================================================ */
 const VIEWS = ["login", "home", "themes", "guide", "quiz", "wrong", "terms", "yoten", "stats", "settings",
-  "exam", "examrun", "examresult", "plan", "notes", "reportguide"];
+  "exam", "examrun", "examresult", "plan", "notes", "reportguide", "rq"];
 function showView(name) {
   VIEWS.forEach((v) => { $("view-" + v).hidden = v !== name; });
   document.querySelectorAll("#tabbar button").forEach((b) =>
