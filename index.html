@@ -82,6 +82,27 @@
   .seg{display:flex;gap:.4em;flex-wrap:wrap;margin:.4em 0 .8em}
   .seg button{flex:1;padding:.5em .3em}
   [hidden]{display:none !important}
+  textarea{font:inherit;width:100%;padding:.6em .7em;border:1px solid var(--line);
+    border-radius:10px;background:#fff;color:var(--ink);margin:.3em 0 .8em}
+  .kw-item{border-bottom:1px solid var(--line);padding:.5em .1em}
+  .kw-item:last-child{border-bottom:none}
+  .diagram{border:1px solid var(--line);border-radius:10px;padding:.6em .8em;margin:.6em 0;background:#fbfcfe}
+  .diagram .d-title{font-weight:700;margin-bottom:.3em}
+  .diagram .d-item{padding:.15em 0}
+  .diagram .d-arrow{color:var(--muted);text-align:center;line-height:1.1}
+  .pair-item h3{margin:.2em 0 .4em;font-size:1em}
+  .pair-key{background:#fff7e0;border:1px solid #ecd27a;border-radius:8px;padding:.4em .6em;margin-top:.5em}
+  .exam-nav{display:flex;flex-wrap:wrap;gap:.3em;margin:.6em 0}
+  .exam-nav button{width:2.4em;height:2.4em;padding:0;border-radius:50%}
+  .exam-nav button.current{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+  .exam-nav button.answered{border-color:var(--ok);background:#e2f5ea}
+  .exam-nav button.current.answered{background:var(--accent);color:#fff}
+  button.choice.selected{background:var(--chip);border-color:var(--accent);font-weight:700}
+  .note-row{border-bottom:1px solid var(--line);padding:.6em .1em}
+  .note-row:last-child{border-bottom:none}
+  .small-note{font-size:.82em}
+  img.guide-illustration{max-width:100%;height:auto;display:block;margin:.6em auto}
+  #quiz-tempo{font-weight:700;color:var(--accent)}
 </style>
 </head>
 <body>
@@ -120,16 +141,75 @@
       <h2>ミミからのおすすめ</h2>
       <p id="mimi-rec" class="muted">読み込み中…</p>
     </div>
+    <div class="panel">
+      <h2>もっと使う</h2>
+      <div class="row">
+        <button class="secondary grow" id="home-goto-plan">🗓️ 学習プラン</button>
+        <button class="secondary grow" id="home-goto-exam">📝 模擬試験</button>
+      </div>
+      <div class="row" style="margin-top:.5em">
+        <button class="secondary grow" id="home-goto-notes">⭐ ノート・お気に入り</button>
+      </div>
+    </div>
   </section>
 
   <!-- テーマ選択 -->
   <section id="view-themes" hidden>
     <div class="panel">
       <h2>問題を解く</h2>
-      <p class="muted">科目とテーマを選んでね。1テーマ10問まで出るよ。</p>
+      <p class="muted">科目とテーマを選んでね。「予習」で要点を読んでから問題を始めるのがおすすめだよ。1テーマ10問まで出るよ。</p>
       <label for="theme-subject">科目</label>
       <select id="theme-subject"></select>
       <div id="theme-list"></div>
+    </div>
+    <div class="panel">
+      <h2>ドリル</h2>
+      <h3>⏱️ テンポ復習</h3>
+      <p class="muted">今日の復習を、1問ごとの制限時間つきで次々と解くよ。時間切れは間違いとして記録されるよ（最大10問）。</p>
+      <label for="tempo-sec">制限時間</label>
+      <select id="tempo-sec">
+        <option value="30">ゆっくり（30秒／問）</option>
+        <option value="20" selected>ふつう（20秒／問）</option>
+        <option value="10">はやい（10秒／問）</option>
+      </select>
+      <button class="secondary" id="tempo-start" style="width:100%">テンポ復習を始める</button>
+      <p class="muted" id="tempo-message"></p>
+      <h3>形式だけのドリル／科目内テーマミックス</h3>
+      <label for="drill-topic">テーマ（形式ドリル用）</label>
+      <select id="drill-topic"></select>
+      <label for="drill-format">形式</label>
+      <select id="drill-format">
+        <option value="choice">4択</option>
+        <option value="fillin">穴埋め（言葉を打つ）</option>
+        <option value="truefalse">〇×</option>
+      </select>
+      <div class="row">
+        <button class="secondary grow" id="drill-format-start">形式ドリル（5問）</button>
+        <button class="secondary grow" id="drill-mix-start">科目内テーマミックス（10問）</button>
+      </div>
+      <p class="muted">形式ドリルは、選んだテーマ・形式の問題を5問出すよ。テーマミックスは、上の科目の中のテーマを混ぜて10問出すよ。</p>
+    </div>
+  </section>
+
+  <!-- 予習ガイド -->
+  <section id="view-guide" hidden>
+    <div class="panel">
+      <h2 id="guide-title">予習ガイド</h2>
+      <p class="muted">まずは予習だよ。問題はまだ始まっていないよ。読み終わったら、下のボタン「予習を見たら、問題を始める」を押してね。</p>
+      <p id="guide-intro" style="white-space:pre-wrap"></p>
+      <h3>大切な言葉</h3>
+      <div id="guide-keywords"></div>
+      <div id="guide-diagram"></div>
+      <img class="guide-illustration" id="guide-illustration" alt="イラスト" hidden>
+      <img class="yoten" id="guide-yoten" alt="要点まとめ画像" hidden>
+      <div id="guide-related" style="margin-top:.8em"></div>
+      <div class="row" style="margin-top:.9em">
+        <button class="primary grow" id="guide-to-quiz">予習を見たら、問題を始める</button>
+      </div>
+      <div class="row" style="margin-top:.5em">
+        <button class="secondary grow" id="guide-fav-btn">⭐ お気に入りに追加</button>
+        <button class="secondary grow" id="guide-back-themes">テーマ一覧へ戻る</button>
+      </div>
     </div>
   </section>
 
@@ -138,6 +218,7 @@
     <div class="panel">
       <p class="muted" id="quiz-count"></p>
       <p class="muted" id="quiz-where"></p>
+      <p id="quiz-tempo" hidden></p>
       <div class="qtext" id="quiz-question"></div>
       <div id="quiz-choices"></div>
       <div id="quiz-fillin" hidden>
@@ -150,6 +231,10 @@
       <div class="row" style="margin-top:.8em">
         <button class="primary grow" id="quiz-next" hidden>次の問題</button>
         <button class="secondary" id="quiz-quit">やめる</button>
+      </div>
+      <div class="row" style="margin-top:.5em">
+        <button class="secondary grow" id="quiz-later-btn">🕐 あとで解く</button>
+        <button class="secondary grow" id="quiz-fav-btn">⭐ お気に入り</button>
       </div>
       <p class="muted" id="quiz-save-note"></p>
     </div>
@@ -181,6 +266,7 @@
       <div class="seg">
         <button id="tc-tab-cards" class="selected">📖 カード</button>
         <button id="tc-tab-quiz">🎯 言葉クイズ</button>
+        <button id="tc-tab-pairs">🔀 混同ペア</button>
       </div>
       <div id="tc-cards-area">
         <p class="muted">カードをタップすると、意味が見られるよ。</p>
@@ -206,6 +292,25 @@
           <div id="wq-missed"></div>
         </div>
         <p class="muted">言葉クイズの結果は、学習記録には残らないよ（パソコン版と同じ）。</p>
+      </div>
+      <div id="tc-pairs-area" hidden>
+        <label for="cp-subject">科目</label>
+        <select id="cp-subject"></select>
+        <p class="muted" id="cp-message"></p>
+        <button class="primary" id="cp-quiz-start" style="width:100%">混同ペアクイズを始める（5問）</button>
+        <div id="cp-quiz-panel" hidden>
+          <p class="muted" id="cp-quiz-count"></p>
+          <div class="qtext" id="cp-quiz-question"></div>
+          <div id="cp-quiz-choices"></div>
+          <p id="cp-quiz-feedback"></p>
+          <button class="primary" id="cp-quiz-next" style="width:100%" hidden>次の問題</button>
+        </div>
+        <div id="cp-quiz-result" hidden>
+          <p class="big" id="cp-quiz-score"></p>
+          <div id="cp-quiz-missed"></div>
+        </div>
+        <div id="cp-list"></div>
+        <p class="muted">混同ペアクイズの結果は、学習記録には残らないよ（パソコン版と同じ）。</p>
       </div>
     </div>
   </section>
@@ -237,6 +342,124 @@
       <h2>学習時間</h2>
       <div id="stats-time"></div>
       <p class="muted">学習時間は、パソコン版の集中タイマーで記録したものだよ。</p>
+    </div>
+  </section>
+
+  <!-- 模擬試験：設定と履歴 -->
+  <section id="view-exam" hidden>
+    <div class="panel">
+      <h2>模擬試験</h2>
+      <p class="muted">時間を計って、まとめて解くよ。答え合わせは最後まで出ないよ。</p>
+      <label for="exam-subject">科目</label>
+      <select id="exam-subject">
+        <option value="">全科目ミックス</option>
+      </select>
+      <label for="exam-count">問題数</label>
+      <select id="exam-count">
+        <option value="5">5問</option>
+        <option value="10" selected>10問</option>
+        <option value="20">20問</option>
+      </select>
+      <label for="exam-minutes">制限時間</label>
+      <select id="exam-minutes">
+        <option value="5">5分</option>
+        <option value="10" selected>10分</option>
+        <option value="20">20分</option>
+        <option value="30">30分</option>
+      </select>
+      <label style="font-weight:400"><input type="checkbox" id="exam-weak-focus"> 弱点多め（正答率の低いテーマの問題を多めに出す）</label>
+      <button class="primary" id="exam-start" style="width:100%;margin-top:.6em">模擬試験を始める</button>
+      <p class="bad" id="exam-message"></p>
+    </div>
+    <div class="panel">
+      <h2>模擬試験の履歴</h2>
+      <div id="exam-history"></div>
+    </div>
+  </section>
+
+  <!-- 模擬試験：実施 -->
+  <section id="view-examrun" hidden>
+    <div class="panel">
+      <p class="muted"><span id="exam-progress"></span>　<span id="exam-timer"></span>　<span id="exam-run-subject"></span></p>
+      <p class="muted">答え合わせは最後まで出ません。分からない問題は空けておいても大丈夫だよ。</p>
+      <div class="qtext" id="exam-question"></div>
+      <div id="exam-choices"></div>
+      <div id="exam-fillin" hidden>
+        <label for="exam-fillin-input">答えを入力してね</label>
+        <input type="text" id="exam-fillin-input" autocomplete="off">
+      </div>
+      <div class="exam-nav" id="exam-nav"></div>
+      <div class="row">
+        <button class="secondary grow" id="exam-prev">← 前の問題</button>
+        <button class="secondary grow" id="exam-next">次の問題 →</button>
+      </div>
+      <div class="row" style="margin-top:.6em">
+        <button class="primary grow" id="exam-submit">採点する（終了）</button>
+        <button class="secondary" id="exam-abort">中断する</button>
+      </div>
+      <p class="muted" id="exam-run-message"></p>
+    </div>
+  </section>
+
+  <!-- 模擬試験：結果 -->
+  <section id="view-examresult" hidden>
+    <div class="panel">
+      <h2>模擬試験の結果</h2>
+      <p id="exam-result-summary"></p>
+      <div id="exam-result-subjects"></div>
+    </div>
+    <div class="panel">
+      <h2>問題ごとの振り返り</h2>
+      <div id="exam-result-items"></div>
+      <button class="primary" id="exam-result-home" style="width:100%">ホームへ戻る</button>
+    </div>
+  </section>
+
+  <!-- 学習プラン（閲覧のみ） -->
+  <section id="view-plan" hidden>
+    <div class="panel">
+      <h2>学習プラン</h2>
+      <div id="plan-summary"></div>
+    </div>
+    <div class="panel">
+      <h2>週ごとの計画の目安</h2>
+      <div id="plan-weekly"></div>
+    </div>
+    <div class="panel">
+      <h2>レポート</h2>
+      <div id="plan-reports"></div>
+    </div>
+    <p class="muted">プランの変更は、パソコン版でできるよ（この画面は見るだけだよ）。</p>
+  </section>
+
+  <!-- ノート・お気に入り・あとで解く -->
+  <section id="view-notes" hidden>
+    <div class="panel">
+      <h2>⭐ お気に入り</h2>
+      <div id="fav-list"></div>
+    </div>
+    <div class="panel">
+      <h2>🕐 あとで解く</h2>
+      <div id="later-list"></div>
+    </div>
+    <div class="panel">
+      <h2>📝 ノート</h2>
+      <label for="note-kind">種類</label>
+      <select id="note-kind">
+        <option value="memo">メモ</option>
+        <option value="question">疑問メモ</option>
+        <option value="reward">ごほうびメモ</option>
+        <option value="cornell">コーネル式</option>
+        <option value="checklist">試験当日チェックリスト</option>
+      </select>
+      <label for="note-title">タイトル</label>
+      <input type="text" id="note-title" autocomplete="off">
+      <label for="note-body">本文</label>
+      <textarea id="note-body" rows="4"></textarea>
+      <button class="primary" id="note-save" style="width:100%">ノートを保存する</button>
+      <button class="secondary" id="note-cancel-edit" style="width:100%;margin-top:.4em" hidden>編集をやめる</button>
+      <p class="muted" id="note-message"></p>
+      <div id="notes-list"></div>
     </div>
   </section>
 
@@ -290,12 +513,14 @@
 <script src="data/themes.js"></script>
 <script src="data/seeds.js"></script>
 <script src="data/terms.js"></script>
+<script src="data/guides.js"></script>
+<script src="data/pairs.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
 "use strict";
 /* ============================================================
-   学習サポートAI（スマホ版）v1.0
+   学習サポートAI（スマホ版）v1.1
    - AIなし。シード問題・用語カード・要点画像は同梱の静的データ。
    - 記録は Firebase（study-support-ai-4a4dd）の users/{uid}/data に、
      パソコン版 v0.9.0 の同期形式そのままで読み書きする。
@@ -468,6 +693,16 @@ async function fsPutDoc(docId, table, row, updatedMs) {
   if (!r.ok) throw new Error("firestore-put-" + r.status);
 }
 
+async function fsDeleteDoc(docId) {
+  const token = await fsToken();
+  const url = FS_BASE + "/users/" + currentUser.uid + "/data/" + encodeURIComponent(docId);
+  const r = await fetch(url, {
+    method: "DELETE",
+    headers: { Authorization: "Bearer " + token }
+  });
+  if (!r.ok && r.status !== 404) throw new Error("firestore-delete-" + r.status);
+}
+
 /* ---------- 同期データの保持と書き込み（失敗分は端末に控えて再送する） ---------- */
 const DB = {
   docs: new Map(),       // docId -> {table, updated_at, row}
@@ -477,6 +712,12 @@ const DB = {
   reports: [],           // reports の row（_topics 付き）
   sessions: [],          // study_sessions の row
   served: new Set(),     // user_served_stock の stock_id
+  exams: [],             // exam_sessions の [{key, row}] created_at 降順
+  examQuestions: new Map(), // exam_id -> [{key, row}] idx 昇順
+  favorites: [],         // favorites の [{key, row}]
+  later: [],             // later_questions の [{key, row}]
+  notes: [],             // user_notes の [{key, row}]
+  subjectExamDates: {},  // subject -> exam_date
   loaded: false
 };
 const PENDING_KEY = "ssai_mobile_pending_v1";
@@ -488,6 +729,12 @@ function rebuildIndexes() {
   DB.reports = [];
   DB.sessions = [];
   DB.served = new Set();
+  DB.exams = [];
+  DB.examQuestions = new Map();
+  DB.favorites = [];
+  DB.later = [];
+  DB.notes = [];
+  DB.subjectExamDates = {};
   for (const [docId, d] of DB.docs) {
     const key = docId.slice(docId.indexOf("__") + 2);
     if (d.table === "attempts") DB.attempts.push({ key: key, row: d.row });
@@ -496,8 +743,23 @@ function rebuildIndexes() {
     else if (d.table === "reports") DB.reports.push(d.row);
     else if (d.table === "study_sessions") DB.sessions.push(d.row);
     else if (d.table === "user_served_stock") DB.served.add(d.row.stock_id);
+    else if (d.table === "exam_sessions") DB.exams.push({ key: key, row: d.row });
+    else if (d.table === "exam_questions") {
+      const arr = DB.examQuestions.get(d.row.exam_id) || [];
+      arr.push({ key: key, row: d.row });
+      DB.examQuestions.set(d.row.exam_id, arr);
+    }
+    else if (d.table === "favorites") DB.favorites.push({ key: key, row: d.row });
+    else if (d.table === "later_questions") DB.later.push({ key: key, row: d.row });
+    else if (d.table === "user_notes") DB.notes.push({ key: key, row: d.row });
+    else if (d.table === "subject_exam_dates") DB.subjectExamDates[d.row.subject] = d.row.exam_date;
   }
   DB.attempts.sort((a, b) => (a.row.created_at || 0) - (b.row.created_at || 0));
+  DB.exams.sort((a, b) => (b.row.created_at || 0) - (a.row.created_at || 0));
+  for (const arr of DB.examQuestions.values()) arr.sort((a, b) => (a.row.idx || 0) - (b.row.idx || 0));
+  DB.favorites.sort((a, b) => (b.row.created_at || 0) - (a.row.created_at || 0));
+  DB.later.sort((a, b) => (b.row.created_at || 0) - (a.row.created_at || 0));
+  DB.notes.sort((a, b) => (b.row.updated_at || 0) - (a.row.updated_at || 0));
 }
 
 async function loadAll() {
@@ -533,12 +795,32 @@ async function saveRow(table, syncKey, row) {
     return false;
   }
 }
+/* 1行を削除する。成功したら true、通信失敗なら控えて false。
+   ※パソコン版の同期仕様どおり「削除は伝播しない」ため、パソコン版の
+   ローカルDBに残っている行は消えない（パソコン側で編集されると再送される）。 */
+async function deleteRow(table, syncKey) {
+  const docId = table + "__" + syncKey;
+  DB.docs.delete(docId);
+  rebuildIndexes();
+  try {
+    await fsDeleteDoc(docId);
+    return true;
+  } catch (e) {
+    const list = loadPending().filter((p) => p.docId !== docId);
+    list.push({ docId: docId, table: table, op: "delete" });
+    savePending(list);
+    return false;
+  }
+}
 async function flushPending() {
   const list = loadPending();
   if (!list.length || !currentUser) return;
   const rest = [];
   for (const p of list) {
-    try { await fsPutDoc(p.docId, p.table, p.row, p.updatedMs); }
+    try {
+      if (p.op === "delete") await fsDeleteDoc(p.docId);
+      else await fsPutDoc(p.docId, p.table, p.row, p.updatedMs);
+    }
     catch (e) { rest.push(p); }
   }
   savePending(rest);
@@ -647,8 +929,9 @@ async function markServed(stockId) {
 
 /* 回答を記録する。q は出題形（choices は出題した並び、correct はその位置）。
    reviewKey があれば復習由来としてスケジュールを前進させる。
+   examSessionId があれば模擬試験の回答として attempts に印を付ける。
    戻り値: 全て保存できたら true、一部が控え（オフライン等）になったら false */
-async function recordAnswer(q, selectedIndex, selectedText, isCorrect, reviewKey) {
+async function recordAnswer(q, selectedIndex, selectedText, isCorrect, reviewKey, examSessionId) {
   const now = nowSec();
   const attempt = {
     user_id: 0,
@@ -658,7 +941,8 @@ async function recordAnswer(q, selectedIndex, selectedText, isCorrect, reviewKey
     answer_text: q.answer_text || "", explanation: q.explanation || "",
     selected_index: selectedIndex, selected_text: selectedText || "",
     is_correct: isCorrect ? 1 : 0, created_at: now,
-    confidence: "", wrong_reason: "", exam_session_id: "", difficulty_feel: ""
+    confidence: "", wrong_reason: "", exam_session_id: examSessionId || "",
+    difficulty_feel: ""
   };
   let ok = await saveRow("attempts", randHex(16), attempt);
   if (reviewKey) {
@@ -677,6 +961,132 @@ async function recordAnswer(q, selectedIndex, selectedText, isCorrect, reviewKey
   return ok;
 }
 
+/* ---------- 模擬試験（パソコン版 exam_start / exam_submit の規則を写したもの） ----------
+   - exam_sessions: id は文字列主キーで、同期キーも id そのもの（パソコン版と同じ）
+   - exam_questions: 同期キーは「{exam_id}__{idx}」。行には出題した並びの
+     選択肢と正解を持ち、採点はこの控えで行う（パソコン版と同じ）
+   - 回答は attempts に exam_session_id 付きで記録し、間違えた問題は
+     通常の回答と同じく復習スケジュールにも反映する */
+function newExamId() {
+  const b = new Uint8Array(16);
+  crypto.getRandomValues(b);
+  let bin = "";
+  b.forEach((x) => { bin += String.fromCharCode(x); });
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function buildExamItems(subject, count, weakFocus) {
+  const seeds = window.SSAI_SEEDS || [];
+  const stats = attemptStatsByTopic();
+  let pool = subject ? seeds.filter((s) => s.subject === subject) : seeds.slice();
+  let picked = [];
+  if (weakFocus) {
+    const weakKeys = new Set();
+    for (const [k, v] of stats) {
+      if (v.total >= 2 && v.correct / v.total < 0.6) weakKeys.add(k);
+    }
+    const weakPool = shuffleArr(pool.filter((s) => weakKeys.has(s.subject + "||" + s.topic)));
+    const half = Math.max(1, Math.floor(count / 2));
+    picked = weakPool.slice(0, half);
+    const rest = shuffleArr(pool.filter((s) => !picked.includes(s)));
+    picked = picked.concat(rest.slice(0, count - picked.length));
+  } else {
+    picked = shuffleArr(pool).slice(0, count);
+  }
+  return shuffleArr(picked).map(prepareFromSeed);
+}
+async function saveExamStart(examId, subject, minutes, items) {
+  const now = nowSec();
+  let ok = true;
+  const sessionRow = {
+    id: examId, user_id: 0, subject: subject || "", total: items.length,
+    time_limit_min: minutes, correct_count: null, created_at: now, finished_at: null
+  };
+  ok = (await saveRow("exam_sessions", examId, sessionRow)) && ok;
+  for (let idx = 0; idx < items.length; idx++) {
+    const q = items[idx];
+    const row = {
+      exam_id: examId, idx: idx, stock_id: q.stock_id || "",
+      subject: q.subject, topic: q.topic, format: q.format,
+      difficulty: q.difficulty, question: q.question,
+      choices: JSON.stringify(q.choices), correct_index: q.correct,
+      answer_text: q.answer_text || "", explanation: q.explanation || "",
+      concept: q.concept || ""
+    };
+    ok = (await saveRow("exam_questions", examId + "__" + idx, row)) && ok;
+    if (q.stock_id) await markServed(q.stock_id);
+  }
+  return ok;
+}
+/* 採点して保存する。answers は items と同じ並びの {selected_index, answer_text}。
+   戻り値: {total, correct, bySubject, results, saved} */
+async function gradeAndSaveExam(examId, items, answers) {
+  let ok = true;
+  let correctTotal = 0;
+  const bySubject = new Map();
+  const results = [];
+  for (let i = 0; i < items.length; i++) {
+    const q = items[i];
+    const ans = answers[i] || { selected_index: -1, answer_text: "" };
+    let isCorrect;
+    if (q.format === "fillin") {
+      isCorrect = !!String(ans.answer_text || "").trim() &&
+        normalizeText(ans.answer_text) === normalizeText(q.answer_text);
+    } else {
+      isCorrect = ans.selected_index === q.correct;
+    }
+    if (isCorrect) correctTotal += 1;
+    const bs = bySubject.get(q.subject) || { subject: q.subject, total: 0, correct: 0 };
+    bs.total += 1; bs.correct += isCorrect ? 1 : 0;
+    bySubject.set(q.subject, bs);
+    results.push({ q: q, selected_index: ans.selected_index,
+      selected_text: ans.answer_text || "", is_correct: isCorrect });
+    const selText = q.format === "fillin" ? (ans.answer_text || "") : "";
+    ok = (await recordAnswer(q, ans.selected_index, selText, isCorrect, null, examId)) && ok;
+  }
+  const cur = DB.exams.find((e) => e.key === examId);
+  if (cur) {
+    const row = Object.assign({}, cur.row, {
+      correct_count: correctTotal, finished_at: nowSec()
+    });
+    ok = (await saveRow("exam_sessions", examId, row)) && ok;
+  }
+  return { total: items.length, correct: correctTotal,
+    bySubject: [...bySubject.values()].sort((a, b) => (a.subject < b.subject ? -1 : 1)),
+    results: results, saved: ok };
+}
+
+/* ---------- 予習ガイド・お気に入り・あとで解く ---------- */
+function guideFor(subject, topic) {
+  return (window.SSAI_GUIDES || []).find((g) => g.subject === subject && g.topic === topic) || null;
+}
+function relatedThemes(subject, topic) {
+  const list = (window.SSAI_THEMES.topics[subject] || []);
+  const idx = list.indexOf(topic);
+  if (idx < 0) return { prev: null, next: null };
+  return { prev: idx > 0 ? list[idx - 1] : null,
+           next: idx < list.length - 1 ? list[idx + 1] : null };
+}
+function findFavorite(kind, ref) {
+  return DB.favorites.find((f) => f.row.kind === kind && f.row.ref === ref) || null;
+}
+/* お気に入りの切り替え。戻り値: 登録されていたら true、外したら false */
+async function toggleFavorite(kind, ref, subject, topic) {
+  const cur = findFavorite(kind, ref);
+  if (cur) {
+    await deleteRow("favorites", cur.key);
+    return false;
+  }
+  const row = { id: 0, user_id: 0, kind: kind, ref: ref,
+    subject: subject || "", topic: topic || "", created_at: nowSec() };
+  await saveRow("favorites", randHex(16), row);
+  return true;
+}
+async function addLater(subject, topic, question) {
+  const row = { id: 0, user_id: 0, subject: subject || "", topic: topic || "",
+    question: question, created_at: nowSec() };
+  return saveRow("later_questions", randHex(16), row);
+}
+
 /* ---------- 出題セッション（テーマ／復習／間違い直し共通） ---------- */
 let session = null; // {kind, items:[q], idx, score, answered}
 function prepareFromSeed(seed) {
@@ -686,6 +1096,7 @@ function prepareFromSeed(seed) {
     difficulty: seed.difficulty, question: seed.question,
     choices: sh.choices, correct: sh.correct,
     answer_text: seed.answer_text || "", explanation: seed.explanation || "",
+    concept: seed.concept || "",
     stock_id: seed.id
   };
 }
@@ -749,8 +1160,111 @@ function startRedoSession() {
     r.difficulty, r.question, r.choices, r.correct_index, r.answer_text, r.explanation));
   beginSession("redo", items, "今日の間違い直し");
 }
-function beginSession(kind, items, label) {
-  session = { kind: kind, items: items, idx: 0, score: 0, answered: false, label: label };
+/* ---------- ドリル（テンポ復習／形式ドリル／科目内テーマミックス） ---------- */
+function startTempoSession() {
+  const due = dueReviewRows().slice(0, 10);
+  if (!due.length) { toast("今日の復習はないよ。テンポ復習もお休みだよ"); return; }
+  const sec = parseInt($("tempo-sec").value, 10) || 20;
+  const items = due.map((d) => {
+    const q = prepareFromSnapshot(d.row.subject, d.row.topic, d.row.format,
+      d.row.difficulty, d.row.question, d.row.choices, d.row.correct_index,
+      d.row.answer_text, d.row.explanation);
+    q.reviewKey = d.key;
+    return q;
+  });
+  stopTempoTimer();
+  beginSession("tempo", items, "テンポ復習", sec);
+}
+function startFormatDrill() {
+  const subject = $("theme-subject").value;
+  const topic = $("drill-topic").value;
+  const fmt = $("drill-format").value;
+  const pool = shuffleArr((window.SSAI_SEEDS || []).filter((s) =>
+    s.subject === subject && s.topic === topic && s.format === fmt));
+  if (!pool.length) { toast("このテーマには、その形式の問題がないよ"); return; }
+  const items = pool.slice(0, 5).map(prepareFromSeed);
+  beginSession("drill", items, "形式ドリル：" + subject + "｜" + topic);
+}
+function startSubjectMix() {
+  const subject = $("theme-subject").value;
+  const fmt = $("drill-format").value;
+  const topics = (window.SSAI_THEMES.topics[subject] || []).slice();
+  if (!topics.length) { toast("この科目のテーマがまだ無いみたい"); return; }
+  let bag = shuffleArr(topics);
+  const items = [];
+  for (let i = 0; i < 10; i++) {
+    if (!bag.length) bag = shuffleArr(topics);
+    const tp = bag.pop();
+    const poolAll = (window.SSAI_SEEDS || []).filter((s) => s.subject === subject && s.topic === tp);
+    const poolFmt = poolAll.filter((s) => s.format === fmt);
+    const pool = poolFmt.length ? poolFmt : poolAll;
+    if (!pool.length) continue;
+    items.push(prepareFromSeed(pool[Math.floor(Math.random() * pool.length)]));
+  }
+  if (!items.length) { toast("出題できる問題が見つからなかったよ"); return; }
+  beginSession("mix", items, "科目内テーマミックス：" + subject);
+}
+/* テンポ復習のカウントダウン */
+function stopTempoTimer() {
+  if (session && session.tempoTimer) {
+    clearInterval(session.tempoTimer);
+    session.tempoTimer = null;
+  }
+  const el = $("quiz-tempo");
+  if (el) { el.hidden = true; el.textContent = ""; }
+}
+function startTempoTimer() {
+  if (!session || session.kind !== "tempo") return;
+  stopTempoTimerKeepEl();
+  session.tempoEndsAt = Date.now() + session.tempoSec * 1000;
+  const el = $("quiz-tempo");
+  el.hidden = false;
+  const tick = () => {
+    if (!session || session.kind !== "tempo") { stopTempoTimer(); return; }
+    const remain = Math.max(0, Math.ceil((session.tempoEndsAt - Date.now()) / 1000));
+    el.textContent = "⏱️ テンポ復習 " + (session.idx + 1) + "/" + session.items.length +
+      "問目・残り" + remain + "秒";
+    if (remain <= 0) { stopTempoTimerKeepEl(); tempoTimeout(); }
+  };
+  tick();
+  session.tempoTimer = setInterval(tick, 250);
+}
+function stopTempoTimerKeepEl() {
+  if (session && session.tempoTimer) {
+    clearInterval(session.tempoTimer);
+    session.tempoTimer = null;
+  }
+}
+async function tempoTimeout() {
+  if (!session || session.kind !== "tempo" || session.answered) return;
+  const q = session.items[session.idx];
+  session.answered = true;
+  [...$("quiz-choices").children].forEach((b, i) => {
+    b.disabled = true;
+    if (i === q.correct) b.classList.add("correct");
+  });
+  $("quiz-submit-text").disabled = true;
+  const correctText = q.format === "fillin" ? q.answer_text
+    : (q.choices[q.correct] != null ? q.choices[q.correct] : "");
+  $("quiz-feedback").innerHTML = "<span class='bad'>⏰ 時間切れ</span>" +
+    (correctText ? "　正解は「" + esc(correctText) + "」だよ。" : "") +
+    "<br><span class='muted'>少し置いて次の問題へ進むよ。</span>";
+  const ex = $("quiz-explanation");
+  ex.textContent = q.explanation || "";
+  ex.hidden = !q.explanation;
+  // 時間切れは不正解として記録する（パソコン版と同じ：selected_index -1・空欄）
+  const saved = await recordAnswer(q, -1, "", false, q.reviewKey || null);
+  if (!saved) {
+    $("quiz-save-note").textContent =
+      "通信できなかったので、記録はこの端末に控えたよ。つながったら自動で送るね。";
+  }
+  $("quiz-submit-text").disabled = false;
+  setTimeout(() => { if (session && session.kind === "tempo") nextQuizItem(); }, 2500);
+}
+function beginSession(kind, items, label, tempoSec) {
+  stopTempoTimer();
+  session = { kind: kind, items: items, idx: 0, score: 0, answered: false,
+    label: label, tempoSec: tempoSec || 0, tempoTimer: null, tempoEndsAt: 0 };
   showView("quiz");
   $("quiz-result").hidden = true;
   renderQuizItem();
@@ -766,6 +1280,8 @@ function renderQuizItem() {
   $("quiz-explanation").textContent = "";
   $("quiz-next").hidden = true;
   $("quiz-save-note").textContent = "";
+  $("quiz-tempo").hidden = session.kind !== "tempo";
+  updateQuizSubButtons();
   const box = $("quiz-choices");
   box.innerHTML = "";
   const isFillin = q.format === "fillin";
@@ -782,6 +1298,14 @@ function renderQuizItem() {
     });
   }
   if (q.stock_id) markServed(q.stock_id);
+  if (session.kind === "tempo") startTempoTimer();
+}
+/* クイズ画面の「あとで解く」「お気に入り」ボタンの表示を今の問題に合わせる */
+function updateQuizSubButtons() {
+  if (!session) return;
+  const q = session.items[session.idx];
+  const fav = findFavorite("question", q.question);
+  $("quiz-fav-btn").textContent = fav ? "⭐ お気に入り済み（外す）" : "⭐ お気に入り";
 }
 async function answerCurrent(selectedIndex, selectedText) {
   if (!session || session.answered) return;
@@ -816,7 +1340,9 @@ async function answerCurrent(selectedIndex, selectedText) {
   const ex = $("quiz-explanation");
   ex.textContent = q.explanation || "";
   ex.hidden = !q.explanation;
-  $("quiz-next").hidden = false;
+  const isTempo = session.kind === "tempo";
+  if (isTempo) stopTempoTimerKeepEl();
+  $("quiz-next").hidden = isTempo;
   $("quiz-next").textContent =
     session.idx + 1 >= session.items.length ? "結果を見る" : "次の問題";
   $("quiz-submit-text").disabled = false;
@@ -825,11 +1351,17 @@ async function answerCurrent(selectedIndex, selectedText) {
     $("quiz-save-note").textContent =
       "通信できなかったので、記録はこの端末に控えたよ。つながったら自動で送るね。";
   }
+  if (isTempo) {
+    // パソコン版と同じく、少し置いて自動で次の問題へ進む
+    setTimeout(() => { if (session && session.kind === "tempo") nextQuizItem(); }, 1600);
+  }
 }
 function nextQuizItem() {
   if (!session) return;
+  stopTempoTimerKeepEl();
   session.idx += 1;
   if (session.idx >= session.items.length) {
+    $("quiz-tempo").hidden = true;
     $("quiz-result-text").textContent =
       session.items.length + "問中 " + session.score + "問正解だったよ。";
     $("quiz-result").hidden = false;
@@ -845,7 +1377,8 @@ function nextQuizItem() {
 /* ============================================================
    画面の描画とナビゲーション
    ============================================================ */
-const VIEWS = ["login", "home", "themes", "quiz", "wrong", "terms", "yoten", "stats", "settings"];
+const VIEWS = ["login", "home", "themes", "guide", "quiz", "wrong", "terms", "yoten", "stats", "settings",
+  "exam", "examrun", "examresult", "plan", "notes"];
 function showView(name) {
   VIEWS.forEach((v) => { $("view-" + v).hidden = v !== name; });
   document.querySelectorAll("#tabbar button").forEach((b) =>
@@ -943,7 +1476,7 @@ function renderHome() {
       jstDateStr(new Date((a.row.created_at || 0) * 1000)) === today);
     items.push({ icon: "📖", title: "予習と問題：" + r.subject + "｜" + r.topic,
       detail: r.reason, done: doneToday,
-      action: () => startThemeSession(r.subject, r.topic) });
+      action: () => openGuide(r.subject, r.topic) });
   });
   items.push({ icon: "📒", title: "今日の間違い直し",
     detail: wrongs.length ? "今日間違えた問題が " + wrongs.length + "問あるよ" : "今日の間違いはないよ",
@@ -981,6 +1514,18 @@ function renderHome() {
 }
 
 /* ---------- テーマ選択 ---------- */
+function fillDrillTopics() {
+  const subject = $("theme-subject").value;
+  const sel = $("drill-topic");
+  const cur = sel.value;
+  sel.innerHTML = "";
+  ((window.SSAI_THEMES.topics[subject] || [])).forEach((tp) => {
+    const o = document.createElement("option");
+    o.value = tp; o.textContent = tp;
+    sel.appendChild(o);
+  });
+  if (cur && [...sel.options].some((o) => o.value === cur)) sel.value = cur;
+}
 function renderThemes() {
   const THEMES = window.SSAI_THEMES;
   const sel = $("theme-subject");
@@ -1002,6 +1547,21 @@ function renderThemes() {
     div.innerHTML = "<div class='body'><strong>" + esc(tp) + "</strong><br>" +
       "<span class='muted'>" + (st ? st.total + "問解いて " + st.correct + "問正解" : "まだ解いていないテーマ") +
       "</span></div>";
+    const favB = document.createElement("button");
+    favB.className = "secondary";
+    favB.textContent = findFavorite("theme", subject + "|" + tp) ? "⭐" : "☆";
+    favB.title = "お気に入り";
+    favB.addEventListener("click", async () => {
+      const on = await toggleFavorite("theme", subject + "|" + tp, subject, tp);
+      favB.textContent = on ? "⭐" : "☆";
+      toast(on ? "お気に入りに追加したよ" : "お気に入りから外したよ");
+    });
+    div.appendChild(favB);
+    const gB = document.createElement("button");
+    gB.className = "secondary";
+    gB.textContent = "予習";
+    gB.addEventListener("click", () => openGuide(subject, tp));
+    div.appendChild(gB);
     const b = document.createElement("button");
     b.className = "primary";
     b.textContent = "解く";
@@ -1009,6 +1569,97 @@ function renderThemes() {
     div.appendChild(b);
     list.appendChild(div);
   });
+  fillDrillTopics();
+}
+
+/* ---------- 予習ガイド ---------- */
+let guideCtx = null; // {subject, topic}
+function renderDiagram(diagram) {
+  const wrap = document.createElement("div");
+  wrap.className = "diagram";
+  const title = document.createElement("div");
+  title.className = "d-title";
+  title.textContent = diagram.title || "図解";
+  wrap.appendChild(title);
+  (diagram.items || []).forEach((it, i) => {
+    if (i > 0) {
+      const ar = document.createElement("div");
+      ar.className = "d-arrow";
+      ar.textContent = "▼";
+      wrap.appendChild(ar);
+    }
+    const d = document.createElement("div");
+    d.className = "d-item";
+    d.innerHTML = "<strong>" + esc(it.label || "") + "</strong>" +
+      (it.sub ? "　<span class='muted'>" + esc(it.sub) + "</span>" : "");
+    wrap.appendChild(d);
+  });
+  return wrap;
+}
+function openGuide(subject, topic) {
+  guideCtx = { subject: subject, topic: topic };
+  const g = guideFor(subject, topic);
+  $("guide-title").textContent = subject + "／" + topic + " の予習";
+  $("guide-intro").textContent = g ? (g.intro || "") :
+    "このテーマの予習ガイドは、まだ用意できていないよ。問題から始めてね。";
+  const kw = $("guide-keywords");
+  kw.innerHTML = "";
+  if (g && (g.keywords || []).length) {
+    g.keywords.forEach((k) => {
+      const div = document.createElement("div");
+      div.className = "kw-item";
+      div.innerHTML = "<strong>" + esc(k.word) + "</strong>：" + esc(k.meaning);
+      kw.appendChild(div);
+    });
+  } else {
+    kw.innerHTML = "<p class='muted'>キーワードはまだないよ。</p>";
+  }
+  const dg = $("guide-diagram");
+  dg.innerHTML = "";
+  if (g && g.diagram) dg.appendChild(renderDiagram(g.diagram));
+  const ill = $("guide-illustration");
+  if (g && g.illustration) {
+    ill.src = "illustrations/" + g.illustration + ".svg";
+    ill.hidden = false;
+  } else {
+    ill.hidden = true;
+    ill.removeAttribute("src");
+  }
+  const gy = $("guide-yoten");
+  const yfile = window.SSAI_THEMES.yoten[subject + "||" + topic];
+  if (yfile) {
+    gy.src = "yoten/" + yfile;
+    gy.hidden = false;
+  } else {
+    gy.hidden = true;
+    gy.removeAttribute("src");
+  }
+  const rel = relatedThemes(subject, topic);
+  const relEl = $("guide-related");
+  relEl.innerHTML = "";
+  if (rel.prev || rel.next) {
+    const label = document.createElement("span");
+    label.className = "muted";
+    label.textContent = "関連テーマ：";
+    relEl.appendChild(label);
+    if (rel.prev) {
+      const b = document.createElement("button");
+      b.className = "secondary";
+      b.textContent = "◀ 前のテーマ：" + rel.prev;
+      b.addEventListener("click", () => openGuide(subject, rel.prev));
+      relEl.appendChild(b);
+    }
+    if (rel.next) {
+      const b = document.createElement("button");
+      b.className = "secondary";
+      b.textContent = "次のテーマ ▶：" + rel.next;
+      b.addEventListener("click", () => openGuide(subject, rel.next));
+      relEl.appendChild(b);
+    }
+  }
+  const fav = findFavorite("theme", subject + "|" + topic);
+  $("guide-fav-btn").textContent = fav ? "⭐ お気に入り済み（外す）" : "⭐ お気に入りに追加";
+  showView("guide");
 }
 
 /* ---------- 間違いノート ---------- */
@@ -1101,6 +1752,16 @@ function renderTermCards() {
     div.innerHTML = "<div class='term'>" + rubyTerm(c) + "</div>" +
       "<div class='meaning' hidden><strong>" + esc(c.meaning) + "</strong>" +
       (c.note ? "<br><span class='muted'>" + esc(c.note) + "</span>" : "") + "</div>";
+    const favB = document.createElement("button");
+    favB.className = "secondary";
+    const ref = $("tc-subject").value + "|" + $("tc-topic").value + "|" + c.term;
+    favB.textContent = findFavorite("term", ref) ? "⭐ お気に入り済み" : "☆ お気に入り";
+    favB.addEventListener("click", async (ev) => {
+      ev.stopPropagation();
+      const on = await toggleFavorite("term", ref, $("tc-subject").value, $("tc-topic").value);
+      favB.textContent = on ? "⭐ お気に入り済み" : "☆ お気に入り";
+    });
+    div.appendChild(favB);
     div.addEventListener("click", () => {
       const m = div.querySelector(".meaning");
       m.hidden = !m.hidden;
@@ -1252,6 +1913,552 @@ function renderStats() {
   $("stats-time").innerHTML =
     "<p>今日：" + todayMin + " 分</p><p>合計：" + sumMin(DB.sessions) + " 分</p>";
 }
+
+/* ---------- 模擬試験 ---------- */
+let examRun = null; // {id, subject, minutes, items, answers, current, endsAt, timerId, submitted}
+function renderExamHistory() {
+  const el = $("exam-history");
+  el.innerHTML = "";
+  if (!DB.exams.length) {
+    el.innerHTML = "<p class='muted'>まだ模擬試験の記録はないよ。</p>";
+    return;
+  }
+  DB.exams.forEach((e) => {
+    const r = e.row;
+    const div = document.createElement("div");
+    div.className = "item";
+    const date = r.created_at ? jstDateStr(new Date(r.created_at * 1000)) : "";
+    let detail;
+    if (r.finished_at) {
+      const acc = r.total ? Math.round((r.correct_count || 0) / r.total * 100) : 0;
+      detail = r.total + "問中 " + (r.correct_count || 0) + "問正解（正答率 " + acc + "%）";
+    } else {
+      detail = "途中で終わった模擬試験だよ";
+    }
+    div.innerHTML = "<div class='body'><strong>" + esc(r.subject || "全科目ミックス") +
+      "</strong><br><span class='muted'>" + esc(date) + "｜" + esc(detail) + "</span></div>";
+    el.appendChild(div);
+  });
+}
+async function startExamRun() {
+  const subject = $("exam-subject").value;
+  const count = parseInt($("exam-count").value, 10) || 10;
+  const minutes = parseInt($("exam-minutes").value, 10) || 10;
+  const weak = $("exam-weak-focus").checked;
+  $("exam-message").textContent = "";
+  const items = buildExamItems(subject, count, weak);
+  if (!items.length) {
+    $("exam-message").textContent = "出題できる問題がまだありません";
+    return;
+  }
+  const examId = newExamId();
+  examRun = { id: examId, subject: subject, minutes: minutes, items: items,
+    answers: items.map(() => ({ selected_index: -1, answer_text: "" })),
+    current: 0, endsAt: Date.now() + minutes * 60 * 1000,
+    timerId: null, submitted: false };
+  const saved = await saveExamStart(examId, subject, minutes, items);
+  if (!saved) toast("通信できなかったので、模擬試験の記録はこの端末に控えたよ。つながったら自動で送るね。");
+  showView("examrun");
+  renderExamRunItem();
+  examRun.timerId = setInterval(tickExamTimer, 500);
+  tickExamTimer();
+}
+function tickExamTimer() {
+  if (!examRun || examRun.submitted) return;
+  const remain = Math.max(0, Math.round((examRun.endsAt - Date.now()) / 1000));
+  $("exam-timer").textContent = "残り " + Math.floor(remain / 60) + ":" +
+    String(remain % 60).padStart(2, "0");
+  if (remain <= 0) submitExamRun(true);
+}
+function saveExamAnswerFromUI() {
+  if (!examRun) return;
+  const q = examRun.items[examRun.current];
+  if (!q || q.format !== "fillin") return;
+  examRun.answers[examRun.current].answer_text = $("exam-fillin-input").value.trim();
+}
+function renderExamRunItem() {
+  if (!examRun) return;
+  const q = examRun.items[examRun.current];
+  const ans = examRun.answers[examRun.current];
+  $("exam-progress").textContent = (examRun.current + 1) + " / " + examRun.items.length + " 問";
+  $("exam-run-subject").textContent = examRun.subject || "全科目ミックス";
+  $("exam-question").textContent = q.question;
+  $("exam-run-message").textContent = "";
+  const isFillin = q.format === "fillin";
+  $("exam-fillin").hidden = !isFillin;
+  const box = $("exam-choices");
+  box.innerHTML = "";
+  if (isFillin) {
+    $("exam-fillin-input").value = ans.answer_text || "";
+  } else {
+    q.choices.forEach((c, i) => {
+      const b = document.createElement("button");
+      b.className = "choice" + (ans.selected_index === i ? " selected" : "");
+      b.textContent = c;
+      b.addEventListener("click", () => {
+        examRun.answers[examRun.current].selected_index = i;
+        [...box.children].forEach((x, j) => x.classList.toggle("selected", j === i));
+        renderExamNav();
+      });
+      box.appendChild(b);
+    });
+  }
+  $("exam-prev").disabled = examRun.current === 0;
+  $("exam-next").disabled = examRun.current === examRun.items.length - 1;
+  renderExamNav();
+}
+function renderExamNav() {
+  const nav = $("exam-nav");
+  nav.innerHTML = "";
+  if (!examRun) return;
+  examRun.items.forEach((q, i) => {
+    const a = examRun.answers[i];
+    const answered = q.format === "fillin"
+      ? !!(a.answer_text && a.answer_text.trim()) : a.selected_index >= 0;
+    const b = document.createElement("button");
+    b.className = (i === examRun.current ? "current" : "") + (answered ? " answered" : "");
+    b.textContent = String(i + 1);
+    b.addEventListener("click", () => {
+      saveExamAnswerFromUI();
+      examRun.current = i;
+      renderExamRunItem();
+    });
+    nav.appendChild(b);
+  });
+}
+async function submitExamRun(auto) {
+  if (!examRun || examRun.submitted) return;
+  saveExamAnswerFromUI();
+  examRun.submitted = true;
+  if (examRun.timerId) clearInterval(examRun.timerId);
+  $("exam-run-message").textContent = auto ? "時間になったので、採点するね。" : "採点しているよ…";
+  const res = await gradeAndSaveExam(examRun.id, examRun.items, examRun.answers);
+  const pct = res.total ? Math.round(res.correct / res.total * 100) : 0;
+  $("exam-result-summary").innerHTML = res.total + "問中 <strong>" + res.correct +
+    "問</strong> 正解（正答率 " + pct + "%）" +
+    (res.saved ? "" : "<br><span class='muted'>通信できなかったので、記録はこの端末に控えたよ。つながったら自動で送るね。</span>");
+  let html = "<table class='stats'><tr><th>科目</th><th>解いた数</th><th>正解</th><th>正答率</th></tr>";
+  res.bySubject.forEach((s) => {
+    html += "<tr><td>" + esc(s.subject) + "</td><td>" + s.total + "問</td><td>" + s.correct +
+      "問</td><td>" + (s.total ? Math.round(s.correct / s.total * 100) : 0) + "%</td></tr>";
+  });
+  $("exam-result-subjects").innerHTML = html + "</table>";
+  const itemsEl = $("exam-result-items");
+  itemsEl.innerHTML = "";
+  res.results.forEach((r, i) => {
+    const q = r.q;
+    const div = document.createElement("div");
+    div.className = "card-term";
+    const correctText = q.format === "fillin" ? q.answer_text
+      : (q.choices[q.correct] != null ? q.choices[q.correct] : "");
+    const yourText = q.format === "fillin" ? (r.selected_text || "（空欄）")
+      : (r.selected_index >= 0 && q.choices[r.selected_index] != null
+          ? q.choices[r.selected_index] : "（無回答）");
+    div.innerHTML = "<span class='badge'>" + esc(q.subject) + "｜" + esc(q.topic) + "</span> " +
+      (r.is_correct ? "<span class='ok'>⭕ 正解</span>" : "<span class='bad'>❌ 不正解</span>") +
+      "<div class='term' style='font-size:1em'>" + (i + 1) + ". " + esc(q.question) + "</div>" +
+      "<div class='meaning'>あなたの答え：" + esc(yourText) + "<br>正解：" +
+      "<strong>" + esc(correctText) + "</strong></div>" +
+      (q.explanation ? "<div class='muted'>" + esc(q.explanation) + "</div>" : "");
+    itemsEl.appendChild(div);
+  });
+  examRun = null;
+  renderExamHistory();
+  renderHome();
+  showView("examresult");
+}
+function abortExamRun() {
+  if (examRun && examRun.timerId) clearInterval(examRun.timerId);
+  examRun = null;
+  renderExamHistory();
+  showView("exam");
+}
+
+/* ---------- 学習プラン（閲覧のみ。パソコン版 compute_plan の考え方） ---------- */
+const PROVISIONAL_EXAM_DATE = "2027-01-25";
+function topicProgress(subject, topic) {
+  const st = attemptStatsByTopic().get(subject + "||" + topic);
+  if (!st || !st.total) return 0;
+  return Math.min(100, Math.round(st.total / 10 * 100 * (0.5 + 0.5 * (st.correct / st.total))));
+}
+function computePlanMobile() {
+  const THEMES = window.SSAI_THEMES;
+  const stats = attemptStatsByTopic();
+  const today = todayJST();
+  const settings = DB.settings || {};
+  let provisional = false;
+  const perSubjectDate = {};
+  for (const s of THEMES.subjects) {
+    perSubjectDate[s] = DB.subjectExamDates[s] || settings.exam_date || null;
+    if (!perSubjectDate[s]) { perSubjectDate[s] = PROVISIONAL_EXAM_DATE; provisional = true; }
+  }
+  const effDates = [...new Set(Object.values(perSubjectDate))].sort();
+  const mainDate = settings.exam_date ||
+    (Object.values(DB.subjectExamDates).sort()[0]) || PROVISIONAL_EXAM_DATE;
+  const daysLeft = daysBetween(today, mainDate);
+  const assignments = new Map(); // offset -> [{subject, topic}]
+  let totalRemaining = 0, totalTopics = 0, doneTopics = 0;
+  for (const s of THEMES.subjects) {
+    const remaining = (THEMES.topics[s] || []).filter((tp) => !stats.has(s + "||" + tp));
+    totalTopics += (THEMES.topics[s] || []).length;
+    doneTopics += (THEMES.topics[s] || []).length - remaining.length;
+    totalRemaining += remaining.length;
+    const dl = daysBetween(today, perSubjectDate[s]);
+    if (remaining.length && dl >= 0) {
+      const span = Math.max(dl, 0) + 1;
+      const perDay = Math.max(1, Math.ceil(remaining.length / span));
+      remaining.forEach((tp, i) => {
+        let offset = Math.floor(i / perDay);
+        if (offset > dl) offset = Math.max(dl, 0);
+        const arr = assignments.get(offset) || [];
+        arr.push({ subject: s, topic: tp });
+        assignments.set(offset, arr);
+      });
+    }
+  }
+  const weekly = new Map();
+  for (const [offset, items] of [...assignments.entries()].sort((a, b) => a[0] - b[0])) {
+    const wk = Math.floor(offset / 7);
+    if (wk > 19) continue;
+    const from = dateAdd(today, wk * 7);
+    const w = weekly.get(wk) || { week: wk + 1, from: from, to: dateAdd(today, wk * 7 + 6),
+      topics: 0, subjects: {} };
+    items.forEach((it) => {
+      w.topics += 1;
+      w.subjects[it.subject] = (w.subjects[it.subject] || 0) + 1;
+    });
+    weekly.set(wk, w);
+  }
+  return { mainDate: mainDate, provisional: provisional && !settings.exam_date &&
+      !Object.keys(DB.subjectExamDates).length,
+    daysLeft: daysLeft, totalTopics: totalTopics, doneTopics: doneTopics,
+    remainingTopics: totalRemaining,
+    perDay: daysLeft >= 0 && totalRemaining
+      ? Math.ceil(totalRemaining / (daysLeft + 1)) : 0,
+    weekly: [...weekly.values()],
+    dailyGoal: settings.daily_goal || null,
+    todayDone: DB.attempts.filter((a) =>
+      jstDateStr(new Date((a.row.created_at || 0) * 1000)) === today).length,
+    subjectDates: DB.subjectExamDates };
+}
+function renderPlan() {
+  const p = computePlanMobile();
+  let html = "";
+  if (p.daysLeft >= 0) {
+    html += "<p>試験日：" + esc(p.mainDate) + (p.provisional ? "（仮の日程）" : "") +
+      "　あと <span class='big'>" + p.daysLeft + "</span> 日</p>";
+  } else {
+    html += "<p>試験日：" + esc(p.mainDate) + "（過ぎています）</p>";
+  }
+  html += "<p>テーマの進み具合：" + p.doneTopics + " / " + p.totalTopics +
+    " テーマ（あと " + p.remainingTopics + " テーマ・" +
+    (p.totalTopics ? Math.round(p.doneTopics / p.totalTopics * 100) : 0) + "%）</p>";
+  if (p.remainingTopics && p.daysLeft >= 0) {
+    html += "<p>目安：1日に " + p.perDay + " テーマ（約 " + (p.perDay * 5) + " 問）</p>";
+  }
+  if (p.dailyGoal) {
+    html += "<p>今日の目標：" + p.dailyGoal + " 問（今日は " + p.todayDone + " 問解いたよ）</p>";
+  }
+  const subDates = Object.entries(p.subjectDates);
+  if (subDates.length) {
+    html += "<p class='muted'>科目別の試験日：" +
+      subDates.map(([s, d]) => esc(s) + " " + esc(d)).join("、") + "</p>";
+  }
+  $("plan-summary").innerHTML = html;
+  const wk = $("plan-weekly");
+  if (!p.weekly.length) {
+    wk.innerHTML = "<p class='muted'>残りのテーマはないよ。お疲れさま。</p>";
+  } else {
+    let t = "<table class='stats'><tr><th>週</th><th>期間</th><th>テーマ数</th><th>科目</th></tr>";
+    p.weekly.forEach((w) => {
+      t += "<tr><td>第" + w.week + "週</td><td>" + esc(w.from) + "〜" + esc(w.to) +
+        "</td><td>" + w.topics + "</td><td>" +
+        Object.entries(w.subjects).map(([s, c]) => esc(s) + " " + c).join("、") + "</td></tr>";
+    });
+    wk.innerHTML = t + "</table>";
+  }
+  const repEl = $("plan-reports");
+  if (!DB.reports.length) {
+    repEl.innerHTML = "<p class='muted'>レポートはまだ登録されていないよ。</p>";
+  } else {
+    const today = todayJST();
+    const sorted = DB.reports.slice().sort((a, b) => {
+      const ka = a.submitted ? 2 : (a.deadline ? 0 : 1);
+      const kb = b.submitted ? 2 : (b.deadline ? 0 : 1);
+      return ka - kb || String(a.deadline || "9999").localeCompare(String(b.deadline || "9999"));
+    });
+    repEl.innerHTML = "";
+    sorted.forEach((r) => {
+      const topics = r._topics || [];
+      const progresses = topics.map((tp) => topicProgress(r.subject, tp));
+      const prog = topics.length
+        ? Math.round(progresses.reduce((a, x) => a + x, 0) / topics.length) : 0;
+      const done = progresses.filter((x) => x >= 100).length;
+      const div = document.createElement("div");
+      div.className = "item";
+      let detail = "範囲 " + topics.length + " テーマ中 " + done + " テーマ完了（進み具合 " + prog + "%）";
+      if (r.submitted) detail += "｜提出済み";
+      else if (r.deadline) {
+        const left = daysBetween(today, r.deadline);
+        detail += "｜期限 " + r.deadline + "（" +
+          (left < 0 ? "期限を過ぎています" : left === 0 ? "今日まで" : "あと" + left + "日") + "）";
+      }
+      div.innerHTML = "<div class='body'><strong>" + esc(r.name || "") + "（" + esc(r.subject) +
+        "）</strong><br><span class='muted'>" + esc(detail) + "</span></div>";
+      repEl.appendChild(div);
+    });
+  }
+}
+
+/* ---------- ノート・お気に入り・あとで解く ---------- */
+const NOTE_KIND_LABELS = { memo: "メモ", question: "疑問メモ", reward: "ごほうびメモ",
+  cornell: "コーネル式", checklist: "試験当日チェックリスト" };
+let editingNoteKey = null;
+function renderNotes() {
+  // お気に入り
+  const favEl = $("fav-list");
+  favEl.innerHTML = "";
+  if (!DB.favorites.length) {
+    favEl.innerHTML = "<p class='muted'>まだお気に入りはないよ。テーマ・問題・用語につけられるよ。</p>";
+  }
+  DB.favorites.forEach((f) => {
+    const r = f.row;
+    const div = document.createElement("div");
+    div.className = "item";
+    let label;
+    if (r.kind === "theme") label = "テーマ：" + r.subject + "｜" + r.topic;
+    else if (r.kind === "term") label = "用語：" + r.ref.split("|").slice(2).join("|") +
+      "（" + r.subject + "｜" + r.topic + "）";
+    else label = "問題：" + r.ref + "（" + r.subject + "｜" + r.topic + "）";
+    div.innerHTML = "<div class='body'>" + esc(label) + "</div>";
+    if (r.kind === "theme") {
+      const b = document.createElement("button");
+      b.className = "secondary";
+      b.textContent = "予習";
+      b.addEventListener("click", () => openGuide(r.subject, r.topic));
+      div.appendChild(b);
+    }
+    const del = document.createElement("button");
+    del.className = "secondary";
+    del.textContent = "外す";
+    del.addEventListener("click", async () => {
+      await deleteRow("favorites", f.key);
+      renderNotes();
+    });
+    div.appendChild(del);
+    favEl.appendChild(div);
+  });
+  // あとで解く
+  const latEl = $("later-list");
+  latEl.innerHTML = "";
+  if (!DB.later.length) {
+    latEl.innerHTML = "<p class='muted'>まだ「あとで解く」はないよ。問題の画面でつけられるよ。</p>";
+  }
+  DB.later.forEach((l) => {
+    const r = l.row;
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = "<div class='body'><span class='badge'>" + esc(r.subject) + "｜" +
+      esc(r.topic) + "</span><br>" + esc(r.question) + "</div>";
+    const del = document.createElement("button");
+    del.className = "secondary";
+    del.textContent = "消す";
+    del.addEventListener("click", async () => {
+      await deleteRow("later_questions", l.key);
+      renderNotes();
+    });
+    div.appendChild(del);
+    latEl.appendChild(div);
+  });
+  // ノート
+  const noteEl = $("notes-list");
+  noteEl.innerHTML = "";
+  if (!DB.notes.length) {
+    noteEl.innerHTML = "<p class='muted'>まだノートはありません。</p>";
+  }
+  DB.notes.forEach((n) => {
+    const r = n.row;
+    const div = document.createElement("div");
+    div.className = "note-row";
+    div.innerHTML = "<strong>[" + esc(NOTE_KIND_LABELS[r.kind] || r.kind) + "] " +
+      esc(r.title || "(無題)") + "</strong><p style='white-space:pre-wrap;margin:.3em 0'>" +
+      esc(r.body) + "</p>";
+    const row = document.createElement("div");
+    row.className = "row";
+    const edit = document.createElement("button");
+    edit.className = "secondary";
+    edit.textContent = "編集";
+    edit.addEventListener("click", () => {
+      editingNoteKey = n.key;
+      $("note-kind").value = r.kind || "memo";
+      $("note-title").value = r.title || "";
+      $("note-body").value = r.body || "";
+      $("note-save").textContent = "ノートを更新する";
+      $("note-cancel-edit").hidden = false;
+      $("note-message").textContent = "編集中だよ。直したら「ノートを更新する」を押してね。";
+      window.scrollTo(0, 0);
+    });
+    row.appendChild(edit);
+    const del = document.createElement("button");
+    del.className = "secondary";
+    del.textContent = "削除";
+    del.addEventListener("click", async () => {
+      await deleteRow("user_notes", n.key);
+      if (editingNoteKey === n.key) cancelNoteEdit();
+      renderNotes();
+    });
+    row.appendChild(del);
+    div.appendChild(row);
+    noteEl.appendChild(div);
+  });
+}
+function cancelNoteEdit() {
+  editingNoteKey = null;
+  $("note-title").value = "";
+  $("note-body").value = "";
+  $("note-save").textContent = "ノートを保存する";
+  $("note-cancel-edit").hidden = true;
+  $("note-message").textContent = "";
+}
+async function saveNoteFromForm() {
+  const kind = $("note-kind").value;
+  const title = $("note-title").value;
+  const body = $("note-body").value;
+  const now = nowSec();
+  if (editingNoteKey) {
+    const cur = DB.notes.find((n) => n.key === editingNoteKey);
+    if (!cur) { cancelNoteEdit(); return; }
+    const row = Object.assign({}, cur.row, {
+      kind: kind, title: title, body: body, updated_at: now });
+    const ok = await saveRow("user_notes", editingNoteKey, row);
+    $("note-message").textContent = ok ? "更新したよ。" :
+      "通信できなかったので、この端末に控えたよ。つながったら自動で送るね。";
+    cancelNoteEditKeepMsg();
+  } else {
+    const row = { id: 0, user_id: 0, kind: kind, title: title, body: body,
+      created_at: now, updated_at: now };
+    const ok = await saveRow("user_notes", randHex(16), row);
+    $("note-message").textContent = ok ? "保存したよ。" :
+      "通信できなかったので、この端末に控えたよ。つながったら自動で送るね。";
+    $("note-title").value = "";
+    $("note-body").value = "";
+  }
+  renderNotes();
+}
+function cancelNoteEditKeepMsg() {
+  const msg = $("note-message").textContent;
+  cancelNoteEdit();
+  $("note-message").textContent = msg;
+}
+
+/* ---------- 混同ペア（パソコン版と同じ遊び方。結果は記録しない） ---------- */
+let cpQuiz = null;
+function fillPairSubjects() {
+  const sel = $("cp-subject");
+  if (sel.options.length) return;
+  const all = document.createElement("option");
+  all.value = ""; all.textContent = "全科目";
+  sel.appendChild(all);
+  [...new Set((window.SSAI_PAIRS || []).map((p) => p.subject))].forEach((s) => {
+    const o = document.createElement("option");
+    o.value = s; o.textContent = s;
+    sel.appendChild(o);
+  });
+}
+function filteredPairs() {
+  const s = $("cp-subject").value;
+  return (window.SSAI_PAIRS || []).filter((p) => !s || p.subject === s);
+}
+function renderPairs() {
+  fillPairSubjects();
+  const list = filteredPairs();
+  $("cp-message").textContent = list.length + " 組あるよ。";
+  const el = $("cp-list");
+  el.innerHTML = "";
+  list.forEach((p) => {
+    const sec = document.createElement("section");
+    sec.className = "card-term pair-item";
+    sec.innerHTML = "<h3>" + esc(p.subject) + "｜" + p.terms.map(esc).join(" と ") + "</h3>" +
+      p.details.map((d) => "<div><strong>" + esc(d.term) + "</strong>：" +
+        esc(d.description) + "</div>").join("") +
+      (p.key_point ? "<div class='pair-key'>見分けポイント：" + esc(p.key_point) + "</div>" : "");
+    el.appendChild(sec);
+  });
+}
+function startPairsQuiz() {
+  const pool = filteredPairs().filter((p) => p.details.length >= 2);
+  if (pool.length < 2) {
+    $("cp-message").textContent = "クイズを作るには組が足りません。科目を「全科目」にしてみてね。";
+    return;
+  }
+  const allPairs = window.SSAI_PAIRS || [];
+  const picks = shuffleArr(pool).slice(0, Math.min(5, pool.length));
+  const items = picks.map((pair) => {
+    const detail = pair.details[Math.floor(Math.random() * pair.details.length)];
+    const others = shuffleArr(allPairs.filter((p) => p !== pair)
+      .flatMap((p) => p.terms).filter((t) => !pair.terms.includes(t))).slice(0, 4 - pair.terms.length);
+    const choices = shuffleArr([...new Set([...pair.terms.filter((t) => t !== detail.term),
+      detail.term, ...others])].slice(0, 4));
+    return { pair: pair, detail: detail, choices: choices, correct: detail.term };
+  });
+  cpQuiz = { items: items, idx: 0, score: 0, missed: [], answered: false };
+  $("cp-quiz-result").hidden = true;
+  $("cp-quiz-panel").hidden = false;
+  renderPairsQuizItem();
+}
+function renderPairsQuizItem() {
+  const q = cpQuiz.items[cpQuiz.idx];
+  cpQuiz.answered = false;
+  $("cp-quiz-count").textContent = (cpQuiz.idx + 1) + " / " + cpQuiz.items.length + " 問目";
+  $("cp-quiz-question").textContent =
+    "次の説明に合う用語はどれ？（" + q.pair.subject + "）\n「" + q.detail.description + "」";
+  $("cp-quiz-feedback").textContent = "";
+  $("cp-quiz-next").hidden = true;
+  const box = $("cp-quiz-choices");
+  box.innerHTML = "";
+  q.choices.forEach((choice) => {
+    const b = document.createElement("button");
+    b.className = "choice";
+    b.textContent = choice;
+    b.addEventListener("click", () => answerPairsQuiz(b, choice));
+    box.appendChild(b);
+  });
+}
+function answerPairsQuiz(btn, choice) {
+  if (!cpQuiz || cpQuiz.answered) return;
+  cpQuiz.answered = true;
+  const q = cpQuiz.items[cpQuiz.idx];
+  const ok = choice === q.correct;
+  if (ok) cpQuiz.score += 1; else cpQuiz.missed.push(q.pair);
+  [...$("cp-quiz-choices").children].forEach((b) => {
+    b.disabled = true;
+    if (b.textContent === q.correct) b.classList.add("correct");
+    else if (b === btn) b.classList.add("wrong");
+  });
+  $("cp-quiz-feedback").textContent = ok ? "正解！ その調子だよ。"
+    : "残念、正解は「" + q.correct + "」。見分けポイント：" + q.pair.key_point;
+  const next = $("cp-quiz-next");
+  next.textContent = cpQuiz.idx + 1 < cpQuiz.items.length ? "次の問題へ" : "結果を見る";
+  next.hidden = false;
+}
+function nextPairsQuiz() {
+  if (!cpQuiz) return;
+  cpQuiz.idx += 1;
+  if (cpQuiz.idx < cpQuiz.items.length) { renderPairsQuizItem(); return; }
+  $("cp-quiz-panel").hidden = true;
+  $("cp-quiz-result").hidden = false;
+  $("cp-quiz-score").textContent = cpQuiz.items.length + "問中 " + cpQuiz.score + "問 正解でした。";
+  const missed = $("cp-quiz-missed");
+  if (cpQuiz.missed.length) {
+    missed.innerHTML = "<p class='muted'>間違えた組（下の一覧でも確認できるよ）：</p>" +
+      [...new Set(cpQuiz.missed)].map((p) =>
+        "<div class='card-term'><strong>" + p.terms.map(esc).join(" と ") + "</strong>：" +
+        esc(p.key_point) + "</div>").join("");
+  } else {
+    missed.innerHTML = "<p class='muted'>全部正解！ 混同しやすい組をしっかり見分けられているね。</p>";
+  }
+  cpQuiz = null;
+}
 </script>
 <script>
 "use strict";
@@ -1264,6 +2471,7 @@ function refreshAll() {
   renderThemes();
   renderWrong();
   renderStats();
+  renderExamHistory();
 }
 async function onSignedIn() {
   $("who").textContent = currentUser.email || "";
@@ -1351,26 +2559,85 @@ $("theme-subject").addEventListener("change", renderThemes);
 $("quiz-next").addEventListener("click", nextQuizItem);
 $("quiz-submit-text").addEventListener("click", () => answerCurrent(-1, ""));
 $("quiz-quit").addEventListener("click", () => {
+  stopTempoTimer();
   session = null;
   renderHome();
   showView("home");
 });
+$("quiz-later-btn").addEventListener("click", async () => {
+  if (!session) return;
+  const q = session.items[session.idx];
+  const ok = await addLater(q.subject, q.topic, q.question);
+  toast(ok ? "「あとで解く」に入れたよ" : "通信できなかったので、この端末に控えたよ");
+});
+$("quiz-fav-btn").addEventListener("click", async () => {
+  if (!session) return;
+  const q = session.items[session.idx];
+  await toggleFavorite("question", q.question, q.subject, q.topic);
+  updateQuizSubButtons();
+});
 $("quiz-back-home").addEventListener("click", () => { renderHome(); showView("home"); });
 $("wrong-redo-btn").addEventListener("click", startRedoSession);
+/* ---------- ドリル・予習ガイド ---------- */
+$("tempo-start").addEventListener("click", startTempoSession);
+$("drill-format-start").addEventListener("click", startFormatDrill);
+$("drill-mix-start").addEventListener("click", startSubjectMix);
+$("guide-to-quiz").addEventListener("click", () => {
+  if (guideCtx) startThemeSession(guideCtx.subject, guideCtx.topic);
+});
+$("guide-back-themes").addEventListener("click", () => { renderThemes(); showView("themes"); });
+$("guide-fav-btn").addEventListener("click", async () => {
+  if (!guideCtx) return;
+  const on = await toggleFavorite("theme",
+    guideCtx.subject + "|" + guideCtx.topic, guideCtx.subject, guideCtx.topic);
+  $("guide-fav-btn").textContent = on ? "⭐ お気に入り済み（外す）" : "⭐ お気に入りに追加";
+});
+$("guide-yoten").addEventListener("click", () => {
+  if (!$("guide-yoten").src) return;
+  $("lightbox-img").src = $("guide-yoten").src;
+  $("lightbox").classList.add("open");
+});
+/* ---------- ホームからの入口 ---------- */
+$("home-goto-plan").addEventListener("click", () => { renderPlan(); showView("plan"); });
+$("home-goto-exam").addEventListener("click", () => { renderExamHistory(); showView("exam"); });
+$("home-goto-notes").addEventListener("click", () => { renderNotes(); showView("notes"); });
+/* ---------- 模擬試験 ---------- */
+$("exam-start").addEventListener("click", startExamRun);
+$("exam-prev").addEventListener("click", () => {
+  if (!examRun) return;
+  saveExamAnswerFromUI();
+  if (examRun.current > 0) { examRun.current -= 1; renderExamRunItem(); }
+});
+$("exam-next").addEventListener("click", () => {
+  if (!examRun) return;
+  saveExamAnswerFromUI();
+  if (examRun.current < examRun.items.length - 1) { examRun.current += 1; renderExamRunItem(); }
+});
+$("exam-fillin-input").addEventListener("input", () => {
+  if (examRun) examRun.answers[examRun.current].answer_text = $("exam-fillin-input").value.trim();
+});
+$("exam-submit").addEventListener("click", () => submitExamRun(false));
+$("exam-abort").addEventListener("click", abortExamRun);
+$("exam-result-home").addEventListener("click", () => { renderHome(); showView("home"); });
+/* ---------- ノート ---------- */
+$("note-save").addEventListener("click", saveNoteFromForm);
+$("note-cancel-edit").addEventListener("click", cancelNoteEdit);
 $("tc-subject").addEventListener("change", () => { fillTermSelects(); renderTermCards(); });
 $("tc-topic").addEventListener("change", renderTermCards);
-$("tc-tab-cards").addEventListener("click", () => {
-  $("tc-tab-cards").classList.add("selected");
-  $("tc-tab-quiz").classList.remove("selected");
-  $("tc-cards-area").hidden = false;
-  $("tc-quiz-area").hidden = true;
-});
-$("tc-tab-quiz").addEventListener("click", () => {
-  $("tc-tab-quiz").classList.add("selected");
-  $("tc-tab-cards").classList.remove("selected");
-  $("tc-cards-area").hidden = true;
-  $("tc-quiz-area").hidden = false;
-});
+function selectTermsTab(which) {
+  $("tc-tab-cards").classList.toggle("selected", which === "cards");
+  $("tc-tab-quiz").classList.toggle("selected", which === "quiz");
+  $("tc-tab-pairs").classList.toggle("selected", which === "pairs");
+  $("tc-cards-area").hidden = which !== "cards";
+  $("tc-quiz-area").hidden = which !== "quiz";
+  $("tc-pairs-area").hidden = which !== "pairs";
+}
+$("tc-tab-cards").addEventListener("click", () => selectTermsTab("cards"));
+$("tc-tab-quiz").addEventListener("click", () => selectTermsTab("quiz"));
+$("tc-tab-pairs").addEventListener("click", () => { selectTermsTab("pairs"); renderPairs(); });
+$("cp-subject").addEventListener("change", renderPairs);
+$("cp-quiz-start").addEventListener("click", startPairsQuiz);
+$("cp-quiz-next").addEventListener("click", nextPairsQuiz);
 $("wq-start").addEventListener("click", startWordQuiz);
 $("wq-next").addEventListener("click", nextWordQuizItem);
 $("yt-subject").addEventListener("change", fillYotenSelects);
@@ -1394,6 +2661,15 @@ applyRubySize(localStorage.getItem("ssai_rubysize") || "normal");
 syncRubyUi();
 fillTermSelects();
 fillYotenSelects();
+fillPairSubjects();
+(function fillExamSubjects() {
+  const sel = $("exam-subject");
+  (window.SSAI_THEMES.subjects || []).forEach((s) => {
+    const o = document.createElement("option");
+    o.value = s; o.textContent = s;
+    sel.appendChild(o);
+  });
+})();
 </script>
 </body>
 </html>
