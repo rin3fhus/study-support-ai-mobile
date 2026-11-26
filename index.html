@@ -163,6 +163,15 @@
   <!-- ホーム：今日やる学習 -->
   <section id="view-home" hidden>
     <div class="panel">
+      <h2>📝 レポート理解と暗記</h2>
+      <p class="muted">目標は「レポートを理解し、暗記すること」だよ。</p>
+      <p id="home-goal-stats"></p>
+      <div class="row">
+        <button class="primary grow" id="home-goto-rq">✏️ レポートの問題を解く</button>
+        <button class="secondary grow" id="home-goto-rg2">📖 理解ガイド</button>
+      </div>
+    </div>
+    <div class="panel">
       <h2>今日やる学習</h2>
       <p class="muted" id="today-progress"></p>
       <div id="today-list"></div>
@@ -194,11 +203,25 @@
   <section id="view-reportguide" hidden>
     <div class="panel">
       <h2>レポート理解ガイド</h2>
-      <p class="muted">学校のレポート1の問題ごとに、「何を聞かれているか」「答えのポイント」「教科書のどこか」をまとめたよ。科目を選んでね。</p>
+      <p class="muted">学校のレポートの問題ごとに、「何を聞かれているか」「答えのポイント」「教科書のどこか」をまとめたよ。科目を選んでね。</p>
       <div id="rg-subjects"></div>
       <div id="rg-detail"></div>
       <div class="row" style="margin-top:.8em">
         <button class="secondary grow" id="rg-back-home">ホームへ戻る</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- レポートの問題を解く（v1.7） -->
+  <section id="view-rq" hidden>
+    <div class="panel">
+      <h2>✏️ レポートの問題を解く</h2>
+      <p class="muted">学校のレポートの実物の問題だよ。レポートを選んでね。</p>
+      <div id="rq-list"></div>
+      <div id="rq-body"></div>
+      <p class="message" id="rq-message"></p>
+      <div class="row" style="margin-top:.8em">
+        <button class="secondary grow" id="rq-back-home">🏠 ホームへ</button>
       </div>
     </div>
   </section>
@@ -232,12 +255,25 @@
         <option value="choice">4択</option>
         <option value="fillin">穴埋め（言葉を打つ）</option>
         <option value="truefalse">〇×</option>
+        <option value="correction">誤文訂正（レポート形式）</option>
+        <option value="extract">抜き出し（レポート形式）</option>
+        <option value="essay">短い記述（レポート形式）</option>
+        <option value="order">出来事の順序（レポート形式）</option>
+        <option value="random">ランダム（4択・穴埋め・〇×）</option>
+        <option value="random_report">ランダム（レポート形式ミックス）</option>
+      </select>
+      <label for="drill-count">問題数</label>
+      <select id="drill-count">
+        <option value="5" selected>5問</option>
+        <option value="10">10問</option>
+        <option value="15">15問</option>
+        <option value="20">20問</option>
       </select>
       <div class="row">
-        <button class="secondary grow" id="drill-format-start">形式ドリル（5問）</button>
+        <button class="secondary grow" id="drill-format-start">形式ドリルを始める</button>
         <button class="secondary grow" id="drill-mix-start">科目内テーマミックス（10問）</button>
       </div>
-      <p class="muted">形式ドリルは、選んだテーマ・形式の問題を5問出すよ。テーマミックスは、上の科目の中のテーマを混ぜて10問出すよ。</p>
+      <p class="muted">形式ドリルは、選んだ形式の問題を選んだ問題数だけ出すよ（レポート形式は、選んだ科目のレポート問題から出ます）。テーマミックスは、上の科目の中のテーマを混ぜて10問出すよ。</p>
     </div>
   </section>
 
@@ -292,7 +328,10 @@
       </div>
       <div class="row" style="margin-top:.5em">
         <button class="secondary grow" id="quiz-fav-btn">⭐ お気に入り</button>
+        <button class="secondary grow" id="quiz-muse-btn">💬 ミューズに聞く</button>
       </div>
+      <p class="muted" id="quiz-muse-msg"></p>
+      <textarea id="quiz-muse-text" rows="8" style="width:100%" hidden readonly></textarea>
       <!-- v1.4（2A）: 補助的なボタンは「その他」に集約 -->
       <details class="more-menu" id="quiz-more">
         <summary>⚙️ その他の操作（あとで解く・出さない）</summary>
@@ -596,13 +635,14 @@
 <script src="data/guides.js"></script>
 <script src="data/pairs.js"></script>
 <script src="data/report_guides.js"></script>
+  <script src="data/report_questions.js"></script>
 <script src="data/yoten_cards.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
 "use strict";
 /* ============================================================
-   学習サポートAI（スマホ版）v1.6（PC版 v0.9.12 対応）
+   学習サポートAI（スマホ版）v1.7（PC版 v0.9.13 対応）
    v1.6: 模擬試験の結果画面にも「この問題を出さない」ボタンを追加。
    シード問題 seed-rk-danraku-choice-1 の選択肢をPC版に合わせて更新。
    - AIなし。シード問題・用語カード・要点カードは同梱の静的データ。
@@ -1360,11 +1400,52 @@ function startFormatDrill() {
   const subject = $("theme-subject").value;
   const topic = $("drill-topic").value;
   const fmt = $("drill-format").value;
-  const pool = shuffleArr(visibleSeeds().filter((s) =>
-    s.subject === subject && s.topic === topic && s.format === fmt));
+  const count = parseInt(($("drill-count") || {}).value || "5", 10) || 5;
+  // v1.7: レポート形式（誤文訂正・抜き出し・短い記述・出来事の順序）は、
+  // 選んだ科目のレポート問題から出す（テーマは使わない。PC版と同じ）
+  if (["correction", "extract", "essay", "order", "random_report"].includes(fmt)) {
+    startReportDrillPhone(subject, fmt, count);
+    return;
+  }
+  if (fmt === "random") {
+    const fmts = ["choice", "fillin", "truefalse"];
+    const items = [];
+    for (let i = 0; i < count; i++) {
+      const f = fmts[Math.floor(Math.random() * fmts.length)];
+      const pool = visibleSeeds().filter((sd) =>
+        sd.subject === subject && sd.topic === topic && sd.format === f);
+      if (pool.length) items.push(prepareFromSeed(pool[Math.floor(Math.random() * pool.length)]));
+    }
+    if (!items.length) { toast("このテーマには問題がないよ"); return; }
+    beginSession("drill", items, "形式ドリル（ランダム）：" + subject + "｜" + topic);
+    return;
+  }
+  const pool = shuffleArr(visibleSeeds().filter((sd) =>
+    sd.subject === subject && sd.topic === topic && sd.format === fmt));
   if (!pool.length) { toast("このテーマには、その形式の問題がないよ"); return; }
-  const items = pool.slice(0, 5).map(prepareFromSeed);
+  const items = pool.slice(0, count).map(prepareFromSeed);
   beginSession("drill", items, "形式ドリル：" + subject + "｜" + topic);
+}
+function reportQuestionsPoolPhone(subject, fmt) {
+  const sets = (window.SSAI_REPORT_QUESTIONS || []).filter((st) => st.subject === subject);
+  const out = [];
+  sets.forEach((st) => (st.questions || []).forEach((q, qi) => {
+    let ok = false;
+    if (fmt === "random_report") ok = true;
+    else if (fmt === "order") ok = q.format === "choice" && (q.question.includes("順序") || q.question.includes("並べ"));
+    else ok = q.format === fmt;
+    if (ok) out.push({ set: st, q: q, index: qi });
+  }));
+  return out;
+}
+function startReportDrillPhone(subject, fmt, count) {
+  const pool = shuffleArr(reportQuestionsPoolPhone(subject, fmt));
+  if (!pool.length) { toast("この科目には、その形式のレポート問題がまだないよ"); return; }
+  rqState.items = pool.slice(0, count);
+  rqState.pos = 0;
+  rqState.label = "レポート形式ドリル";
+  showView("rq");
+  renderRqItem();
 }
 function startSubjectMix() {
   const subject = $("theme-subject").value;
@@ -1441,7 +1522,7 @@ async function tempoTimeout() {
       "通信できなかったので、記録はこの端末に控えたよ。つながったら自動で送るね。";
   }
   $("quiz-submit-text").disabled = false;
-  setTimeout(() => { if (session && session.kind === "tempo") nextQuizItem(); }, 2500);
+  setTimeout(() => { if (session && session.kind === "tempo") nextQuizItem(); }, 4000);
 }
 function beginSession(kind, items, label, tempoSec) {
   stopTempoTimer();
@@ -1454,10 +1535,13 @@ function beginSession(kind, items, label, tempoSec) {
 function renderQuizItem() {
   const q = session.items[session.idx];
   session.answered = false;
-  $("quiz-count").textContent = (session.idx + 1) + " / " + session.items.length + " 問目";
+  $("quiz-count").textContent = (session.idx + 1) + "問目 / 全" + session.items.length + "問（あと" + (session.items.length - session.idx - 1) + "問）";
   $("quiz-where").textContent = session.label + "｜" + q.subject + "｜" + q.topic;
   $("quiz-question").textContent = q.question;
   $("quiz-feedback").textContent = "";
+  session.lastAnswer = null;
+  const mm = $("quiz-muse-msg"); if (mm) mm.textContent = "";
+  const mt = $("quiz-muse-text"); if (mt) { mt.hidden = true; mt.value = ""; }
   $("quiz-explanation").hidden = true;
   $("quiz-explanation").textContent = "";
   const qdReset = $("quiz-diagram"); if (qdReset) qdReset.innerHTML = "";
@@ -1532,6 +1616,10 @@ async function answerCurrent(selectedIndex, selectedText) {
   $("quiz-next").textContent =
     session.idx + 1 >= session.items.length ? "結果を見る" : "次の問題";
   $("quiz-submit-text").disabled = false;
+  session.lastAnswer = { myAnswer: selectedText || "", isCorrect: isCorrect,
+    correctText: q.format === "fillin" ? q.answer_text : (q.choices[q.correct] != null ? q.choices[q.correct] : "") };
+  const fbEl = $("quiz-feedback");
+  if (fbEl && fbEl.scrollIntoView) setTimeout(() => fbEl.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   const saved = await recordAnswer(q, selectedIndex, selectedText, isCorrect, q.reviewKey || null);
   if (!saved) {
     $("quiz-save-note").textContent =
@@ -1539,7 +1627,7 @@ async function answerCurrent(selectedIndex, selectedText) {
   }
   if (isTempo) {
     // パソコン版と同じく、少し置いて自動で次の問題へ進む
-    setTimeout(() => { if (session && session.kind === "tempo") nextQuizItem(); }, 1600);
+    setTimeout(() => { if (session && session.kind === "tempo") nextQuizItem(); }, 4000);
   }
 }
 function nextQuizItem() {
@@ -1729,11 +1817,35 @@ function renderReportGuideDetail(g) {
     mk("教科書のどこか：", q.textbook);
     detail.appendChild(div);
   });
+  // v1.7: このレポートの「解ける問題」への入り口
+  const set = (window.SSAI_REPORT_QUESTIONS || []).find(
+    (st) => st.subject === g.subject && st.report_no === g.report_no);
+  if (set) {
+    const b = document.createElement("button");
+    b.className = "primary";
+    b.style.width = "100%";
+    b.style.marginTop = ".8em";
+    b.textContent = "✏️ このレポートの問題を解く（全" + (set.questions || []).length + "問）";
+    b.addEventListener("click", () => openRqSet(g.subject, g.report_no));
+    detail.appendChild(b);
+  }
   detail.scrollIntoView({ behavior: "smooth" });
 }
 
 function renderHome() {
   if (!DB.loaded) return;
+  const gs = $("home-goal-stats");
+  if (gs) {
+    const sched = [...DB.review.values()].map((e) => e.row);
+    const deep = sched.filter((r) => (r.stage || 0) >= 2).length;
+    const retention = sched.length ? Math.round(100 * deep / sched.length) : null;
+    const due = dueReviewRows().length;
+    const wrongs0 = todayWrongAttempts().length;
+    gs.textContent = "理解ガイド " + (window.SSAI_REPORT_GUIDES || []).length + "件 ／ レポート問題 " +
+      (window.SSAI_REPORT_QUESTIONS || []).reduce((a, st) => a + (st.questions || []).length, 0) + "問" +
+      " ／ 暗記の定着具合 " + (retention === null ? "まだ復習なし" : retention + "%") +
+      " ／ 今日の復習 " + due + "問 ／ 今日の間違い " + wrongs0 + "問";
+  }
   renderReportReviews();
   const due = dueReviewRows().length;
   const wrongs = todayWrongAttempts();
@@ -3024,6 +3136,244 @@ fillPairSubjects();
     sel.appendChild(o);
   });
 })();
+/* ================= v1.7: レポートの問題を解く（スマホ版） ================= */
+let rqState = { items: [], pos: 0, label: "", current: null, answered: false };
+function rqSets() { return window.SSAI_REPORT_QUESTIONS || []; }
+function renderRqList() {
+  showView("rq");
+  const list = $("rq-list");
+  const body = $("rq-body");
+  list.innerHTML = "";
+  body.innerHTML = "";
+  $("rq-message").textContent = "";
+  const bySubject = new Map();
+  rqSets().forEach((st) => {
+    if (!bySubject.has(st.subject)) bySubject.set(st.subject, []);
+    bySubject.get(st.subject).push(st);
+  });
+  bySubject.forEach((sets, subject) => {
+    const h = document.createElement("p");
+    h.innerHTML = "<strong>" + esc(subject) + "</strong>";
+    list.appendChild(h);
+    sets.forEach((st) => {
+      const b = document.createElement("button");
+      b.className = "secondary";
+      b.style.width = "100%";
+      b.style.marginTop = ".4em";
+      b.textContent = "レポート" + st.report_no + "（全" + (st.questions || []).length + "問）";
+      b.addEventListener("click", () => openRqSet(st.subject, st.report_no));
+      list.appendChild(b);
+    });
+  });
+}
+function openRqSet(subject, reportNo) {
+  const set = rqSets().find((st) => st.subject === subject && st.report_no === reportNo);
+  if (!set) { toast("このレポートの問題はまだないよ"); return; }
+  rqState.items = (set.questions || []).map((q, i) => ({ set: set, q: q, index: i }));
+  rqState.pos = 0;
+  rqState.label = subject + " レポート" + reportNo;
+  showView("rq");
+  $("rq-list").innerHTML = "";
+  renderRqItem();
+}
+function rqPrepare(item) {
+  const q = item.q;
+  const base = { subject: item.set.subject, topic: "レポート" + item.set.report_no,
+    format: q.format === "essay" ? "essay" : (q.format === "choice" ? "choice" : "fillin"),
+    difficulty: 2, question: q.question, explanation: q.explanation || "",
+    answer_text: q.answer_text || "", stock_id: "", choices: [], correct: -1 };
+  if (q.format === "choice") {
+    const order = shuffleArr((q.choices || []).map((c, i) => i));
+    base.choices = order.map((i) => q.choices[i]);
+    base.correct = order.indexOf((q.choices || []).indexOf(q.answer_text));
+  }
+  return base;
+}
+function renderRqItem() {
+  const body = $("rq-body");
+  const item = rqState.items[rqState.pos];
+  if (!item) {
+    body.innerHTML = "<p><strong>全部終わりました。お疲れさま。</strong></p>";
+    return;
+  }
+  rqState.answered = false;
+  const q = rqPrepare(item);
+  rqState.current = q;
+  body.innerHTML = "";
+  const prog = document.createElement("p");
+  prog.className = "muted";
+  prog.textContent = rqState.label + "：" + (rqState.pos + 1) + "問目 / 全" + rqState.items.length +
+    "問（あと" + (rqState.items.length - rqState.pos - 1) + "問）";
+  body.appendChild(prog);
+  const head = document.createElement("p");
+  head.innerHTML = "<strong>" + esc(item.q.heading || "") + "</strong>";
+  body.appendChild(head);
+  const qt = document.createElement("div");
+  qt.className = "qtext";
+  qt.textContent = item.q.question;
+  body.appendChild(qt);
+  const fb = document.createElement("div");
+  fb.id = "rq-feedback";
+  body.appendChild(fb);
+  const finish = (html) => {
+    fb.innerHTML = html;
+    if (fb.scrollIntoView) setTimeout(() => fb.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+    const nb = document.createElement("button");
+    nb.className = "primary";
+    nb.style.width = "100%";
+    nb.style.marginTop = ".6em";
+    nb.textContent = rqState.pos + 1 >= rqState.items.length ? "終わる" : "次の問題";
+    nb.addEventListener("click", () => { rqState.pos += 1; renderRqItem(); });
+    fb.appendChild(nb);
+    const mb = document.createElement("button");
+    mb.className = "secondary";
+    mb.style.width = "100%";
+    mb.style.marginTop = ".4em";
+    mb.textContent = "💬 ミューズに聞く";
+    mb.addEventListener("click", () => askMuseForRq(item, fb));
+    fb.appendChild(mb);
+  };
+  if (item.q.format === "choice") {
+    q.choices.forEach((c, i) => {
+      const b = document.createElement("button");
+      b.className = "choice";
+      b.textContent = c;
+      b.addEventListener("click", async () => {
+        if (rqState.answered) return;
+        rqState.answered = true;
+        const ok = i === q.correct;
+        rqState.lastAnswer = { myAnswer: c, isCorrect: ok, correctText: q.choices[q.correct] || "" };
+        await recordAnswer(q, i, c, ok, null);
+        finish((ok ? "<p><span class='ok'>⭕ 正解だよ</span></p>" :
+          "<p><span class='bad'>❌ 残念</span>　正解は「" + esc(q.choices[q.correct] || "") + "」だよ。</p>") +
+          "<p>" + esc(q.explanation || "") + "</p>");
+      });
+      body.insertBefore(b, fb);
+    });
+  } else if (item.q.format === "essay") {
+    const ta = document.createElement("textarea");
+    ta.rows = 5; ta.style.width = "100%";
+    ta.placeholder = "ここに答えを書いてね" + (item.q.min_chars ? "（" + item.q.min_chars + "字以上" : "") +
+      (item.q.ending ? "・文末は「" + item.q.ending + "」" : "") + "）";
+    body.insertBefore(ta, fb);
+    const sb = document.createElement("button");
+    sb.className = "primary"; sb.style.width = "100%";
+    sb.textContent = "模範解答と比べる";
+    sb.addEventListener("click", () => {
+      if (rqState.answered) return;
+      if (!ta.value.trim()) { toast("答えを書いてから押してね"); return; }
+      fb.innerHTML = "<p><strong>模範解答：</strong>" + esc(item.q.answer_text || "") + "</p><p>" +
+        esc(item.q.explanation || "") + "</p>";
+      const okB = document.createElement("button");
+      okB.className = "secondary"; okB.style.width = "100%";
+      okB.textContent = "書けた";
+      okB.addEventListener("click", async () => {
+        rqState.answered = true;
+        rqState.lastAnswer = { myAnswer: ta.value, isCorrect: true, correctText: item.q.answer_text || "" };
+        await recordAnswer(q, -1, ta.value, true, null);
+        finish("<p>記録したよ。</p>");
+      });
+      const ngB = document.createElement("button");
+      ngB.className = "secondary"; ngB.style.width = "100%"; ngB.style.marginTop = ".4em";
+      ngB.textContent = "まだ書けない";
+      ngB.addEventListener("click", async () => {
+        rqState.answered = true;
+        rqState.lastAnswer = { myAnswer: ta.value, isCorrect: false, correctText: item.q.answer_text || "" };
+        await recordAnswer(q, -1, ta.value, false, null);
+        finish("<p>記録したよ。模範解答をもう一度見ておこう。</p>");
+      });
+      fb.appendChild(okB); fb.appendChild(ngB);
+    });
+    body.insertBefore(sb, fb);
+  } else {
+    const parts = item.q.answer_parts && item.q.answer_parts.length ? item.q.answer_parts : [item.q.answer_text || ""];
+    const inputs = parts.map(() => {
+      const inp = document.createElement("input");
+      inp.type = "text"; inp.style.width = "100%"; inp.style.marginTop = ".4em";
+      inp.setAttribute("autocomplete", "off");
+      body.insertBefore(inp, fb);
+      return inp;
+    });
+    const sb = document.createElement("button");
+    sb.className = "primary"; sb.style.width = "100%"; sb.style.marginTop = ".4em";
+    sb.textContent = "答える";
+    sb.addEventListener("click", async () => {
+      if (rqState.answered) return;
+      const joined = inputs.map((i) => i.value.trim()).join("／");
+      if (!joined.replace(/／/g, "")) { toast("答えを入力してから「答える」を押してね"); return; }
+      rqState.answered = true;
+      const ok = normalizeText(joined) === normalizeText(item.q.answer_text || "");
+      rqState.lastAnswer = { myAnswer: joined, isCorrect: ok, correctText: item.q.answer_text || "" };
+      await recordAnswer(q, -1, joined, ok, null);
+      finish((ok ? "<p><span class='ok'>⭕ 正解だよ</span></p>" :
+        "<p><span class='bad'>❌ 残念</span>　正解は「" + esc(item.q.answer_text || "") + "」だよ。</p>") +
+        "<p>" + esc(q.explanation || "") + "</p>");
+    });
+    body.insertBefore(sb, fb);
+  }
+}
+async function askMuseForRq(item, fb) {
+  const la = rqState.lastAnswer || null;
+  const lines = ["学習アプリの問題について、分かりやすく説明してほしいです。", "",
+    "科目：" + item.set.subject, "テーマ：レポート" + item.set.report_no, "問題：" + item.q.question];
+  if (item.q.choices && item.q.choices.length) {
+    lines.push("選択肢：");
+    item.q.choices.forEach((c, i) => lines.push((i + 1) + ". " + c));
+  }
+  if (la) {
+    lines.push("正しい答え：" + (la.correctText || ""));
+    lines.push("自分の答え：" + (la.myAnswer || ""));
+    lines.push("結果：" + (la.isCorrect ? "正解でした" : "不正解でした"));
+  }
+  if (item.q.explanation) lines.push("アプリの解説：" + item.q.explanation);
+  lines.push("", "分からないところ：", "（ここに、分からないところを書き足してから送ってね）");
+  const text = lines.join("\n");
+  let copied = false;
+  try { await navigator.clipboard.writeText(text); copied = true; } catch (e) { copied = false; }
+  try { window.open("https://muse.ai", "_blank"); } catch (e) { /* noop */ }
+  const msg = document.createElement("p");
+  msg.className = "muted";
+  msg.textContent = copied ? "質問文をコピーして、ミューズのチャットを開きました。貼り付けて送ってね。"
+    : "コピーができなかったので、質問文を表示します。長押ししてコピーしてね。";
+  fb.appendChild(msg);
+  if (!copied) {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.readOnly = true; ta.rows = 8; ta.style.width = "100%";
+    fb.appendChild(ta);
+  }
+}
+/* クイズ画面の「ミューズに聞く」（v1.7で追加：コピー＋チャットを開く） */
+async function askMusePhone() {
+  if (!session) { toast("まず問題を開いてね"); return; }
+  const q = session.items[session.idx];
+  const la = session.lastAnswer || null;
+  const lines = ["学習アプリの問題について、分かりやすく説明してほしいです。", "",
+    "科目：" + q.subject, "テーマ：" + q.topic, "問題：" + q.question];
+  if (q.choices && q.choices.length) {
+    lines.push("選択肢：");
+    q.choices.forEach((c, i) => lines.push((i + 1) + ". " + c));
+  }
+  if (la) {
+    if (la.correctText) lines.push("正しい答え：" + la.correctText);
+    lines.push("自分の答え：" + (la.myAnswer || ""));
+    lines.push("結果：" + (la.isCorrect ? "正解でした" : "不正解でした"));
+  }
+  if (q.explanation) lines.push("アプリの解説：" + q.explanation);
+  lines.push("", "分からないところ：", "（ここに、分からないところを書き足してから送ってね）");
+  const text = lines.join("\n");
+  let copied = false;
+  try { await navigator.clipboard.writeText(text); copied = true; } catch (e) { copied = false; }
+  if (!copied) { const ta = $("quiz-muse-text"); ta.value = text; ta.hidden = false; }
+  try { window.open("https://muse.ai", "_blank"); } catch (e) { /* noop */ }
+  $("quiz-muse-msg").textContent = copied
+    ? "質問文をコピーして、ミューズのチャットを開きました。貼り付けて送ってね。"
+    : "コピーができなかったので、質問文を表示します。長押ししてコピーしてね。チャットは開きました。";
+}
+$("home-goto-rq").addEventListener("click", renderRqList);
+$("home-goto-rg2").addEventListener("click", () => { renderReportGuideSubjects(); showView("reportguide"); });
+$("rq-back-home").addEventListener("click", () => { renderHome(); showView("home"); });
+$("quiz-muse-btn").addEventListener("click", askMusePhone);
 </script>
+
 </body>
 </html>
