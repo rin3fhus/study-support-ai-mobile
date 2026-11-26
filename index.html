@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>学習サポートAI（スマホ版）</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#ffffff; --ink:#1f2733; --muted:#66707e;
+    --accent:#3b5bdb; --accent-ink:#ffffff; --ok:#1e9e62; --bad:#d64545;
+    --line:#dde3ee; --chip:#e8edf9;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;
+    font-size:16px;line-height:1.6}
+  header{position:sticky;top:0;z-index:20;background:var(--card);border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:.5em;padding:.55em .8em}
+  header .title{font-weight:700;font-size:1.05em}
+  header .spacer{flex:1}
+  header .who{color:var(--muted);font-size:.82em;max-width:40vw;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  main{max-width:720px;margin:0 auto;padding:.8em .8em 5.2em}
+  html[data-fontsize="large"] main{zoom:1.12}
+  html[data-fontsize="xlarge"] main{zoom:1.25}
+  html[data-fontsize="small"] main{zoom:0.9}
+  html[data-fontsize="xsmall"] main{zoom:0.8}
+  html[data-rubysize="small"] rt{font-size:40%}
+  html[data-rubysize="xsmall"] rt{font-size:30%}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:.9em 1em;margin:.7em 0}
+  .panel h2{margin:.1em 0 .5em;font-size:1.08em}
+  .panel h3{margin:.6em 0 .3em;font-size:1em}
+  .muted{color:var(--muted);font-size:.9em}
+  button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);padding:.55em .9em}
+  button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+  button.secondary{background:var(--chip)}
+  button.selected{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+  button:disabled{opacity:.45;cursor:default}
+  button.choice{display:block;width:100%;text-align:left;margin:.45em 0;padding:.7em .9em}
+  button.choice.correct{background:#e2f5ea;border-color:var(--ok);font-weight:700}
+  button.choice.wrong{background:#fbe7e7;border-color:var(--bad)}
+  input[type="email"],input[type="password"],input[type="text"],select{
+    font:inherit;width:100%;padding:.6em .7em;border:1px solid var(--line);
+    border-radius:10px;background:#fff;color:var(--ink);margin:.3em 0 .8em}
+  label{font-weight:700;font-size:.92em}
+  .row{display:flex;gap:.5em;flex-wrap:wrap;align-items:center}
+  .row > *{flex:0 0 auto}
+  .grow{flex:1}
+  .item{display:flex;gap:.7em;align-items:flex-start;padding:.65em .2em;border-bottom:1px solid var(--line)}
+  .item:last-child{border-bottom:none}
+  .item .body{flex:1}
+  .item .mark{font-size:1.15em;line-height:1.4}
+  .badge{display:inline-block;background:var(--chip);border-radius:999px;
+    padding:.05em .6em;font-size:.8em;margin-right:.3em}
+  .ok{color:var(--ok);font-weight:700}
+  .bad{color:var(--bad);font-weight:700}
+  .big{font-size:1.25em;font-weight:700}
+  nav#tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--card);
+    border-top:1px solid var(--line);display:flex;justify-content:space-around;
+    padding:.35em .2em calc(.35em + env(safe-area-inset-bottom))}
+  nav#tabbar button{border:none;background:none;padding:.35em .3em;font-size:.78em;
+    display:flex;flex-direction:column;align-items:center;gap:.1em;color:var(--muted)}
+  nav#tabbar button.active{color:var(--accent);font-weight:700}
+  nav#tabbar .ic{font-size:1.35em;line-height:1}
+  .qtext{font-size:1.12em;font-weight:700;margin:.4em 0 .6em;white-space:pre-wrap}
+  .explain{background:#f2f7f0;border:1px solid #cfe3c8;border-radius:10px;padding:.7em .9em;margin-top:.7em}
+  .card-term{border:1px solid var(--line);border-radius:12px;padding:.7em .9em;margin:.5em 0;background:#fff}
+  .card-term .term{font-weight:700;font-size:1.05em}
+  .card-term .meaning{margin-top:.4em}
+  img.yoten{width:100%;height:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
+  #lightbox{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:50;display:none;
+    align-items:center;justify-content:center;padding:.5em}
+  #lightbox.open{display:flex}
+  #lightbox img{max-width:100%;max-height:100%}
+  #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:4.6em;z-index:60;
+    background:#2b3442;color:#fff;border-radius:999px;padding:.55em 1.1em;font-size:.9em;
+    display:none;max-width:92vw;text-align:center}
+  table.stats{width:100%;border-collapse:collapse;font-size:.93em}
+  table.stats th,table.stats td{border-bottom:1px solid var(--line);padding:.45em .3em;text-align:left}
+  .seg{display:flex;gap:.4em;flex-wrap:wrap;margin:.4em 0 .8em}
+  .seg button{flex:1;padding:.5em .3em}
+  [hidden]{display:none !important}
+</style>
+</head>
+<body>
+<header>
+  <div class="title">✦ 学習サポートAI</div>
+  <div class="spacer"></div>
+  <div class="who" id="who"></div>
+  <button id="logout-btn" hidden>ログアウト</button>
+</header>
+
+<main id="main">
+  <!-- ログイン -->
+  <section id="view-login">
+    <div class="panel">
+      <h2>ログイン</h2>
+      <p class="muted">パソコン版で登録したアカウント（メールアドレスとパスワード）でログインしてね。記録はパソコン版と共通だよ。</p>
+      <label for="login-email">メールアドレス</label>
+      <input type="email" id="login-email" autocomplete="username">
+      <label for="login-password">パスワード</label>
+      <input type="password" id="login-password" autocomplete="current-password">
+      <button class="primary" id="login-btn" style="width:100%">ログイン</button>
+      <p class="bad" id="login-error"></p>
+      <p class="muted">アカウントの登録は、パソコン版の「その他 → 設定 → 📱 スマホ版とつなぐ（アカウント）」からできるよ。</p>
+    </div>
+  </section>
+
+  <!-- ホーム：今日やる学習 -->
+  <section id="view-home" hidden>
+    <div class="panel">
+      <h2>今日やる学習</h2>
+      <p class="muted" id="today-progress"></p>
+      <div id="today-list"></div>
+      <p class="muted" id="today-empty" hidden>今日の分は全部できたよ。お疲れさま。</p>
+    </div>
+    <div class="panel">
+      <h2>ミミからのおすすめ</h2>
+      <p id="mimi-rec" class="muted">読み込み中…</p>
+    </div>
+  </section>
+
+  <!-- テーマ選択 -->
+  <section id="view-themes" hidden>
+    <div class="panel">
+      <h2>問題を解く</h2>
+      <p class="muted">科目とテーマを選んでね。1テーマ10問まで出るよ。</p>
+      <label for="theme-subject">科目</label>
+      <select id="theme-subject"></select>
+      <div id="theme-list"></div>
+    </div>
+  </section>
+
+  <!-- 問題（共通） -->
+  <section id="view-quiz" hidden>
+    <div class="panel">
+      <p class="muted" id="quiz-count"></p>
+      <p class="muted" id="quiz-where"></p>
+      <div class="qtext" id="quiz-question"></div>
+      <div id="quiz-choices"></div>
+      <div id="quiz-fillin" hidden>
+        <label for="quiz-answer-text">答えを入力してね</label>
+        <input type="text" id="quiz-answer-text" autocomplete="off">
+        <button class="primary" id="quiz-submit-text" style="width:100%">答える</button>
+      </div>
+      <p id="quiz-feedback"></p>
+      <div class="explain" id="quiz-explanation" hidden></div>
+      <div class="row" style="margin-top:.8em">
+        <button class="primary grow" id="quiz-next" hidden>次の問題</button>
+        <button class="secondary" id="quiz-quit">やめる</button>
+      </div>
+      <p class="muted" id="quiz-save-note"></p>
+    </div>
+    <div class="panel" id="quiz-result" hidden>
+      <h2>お疲れさま</h2>
+      <p id="quiz-result-text"></p>
+      <button class="primary" id="quiz-back-home" style="width:100%">ホームへ戻る</button>
+    </div>
+  </section>
+
+  <!-- 間違いノート -->
+  <section id="view-wrong" hidden>
+    <div class="panel">
+      <h2>間違いノート</h2>
+      <p class="muted" id="wrong-summary"></p>
+      <button class="primary" id="wrong-redo-btn" style="width:100%" hidden>今日の間違い直しをする</button>
+      <div id="wrong-list"></div>
+    </div>
+  </section>
+
+  <!-- 用語カード・言葉クイズ -->
+  <section id="view-terms" hidden>
+    <div class="panel">
+      <h2>用語カード</h2>
+      <label for="tc-subject">科目</label>
+      <select id="tc-subject"></select>
+      <label for="tc-topic">テーマ</label>
+      <select id="tc-topic"></select>
+      <div class="seg">
+        <button id="tc-tab-cards" class="selected">📖 カード</button>
+        <button id="tc-tab-quiz">🎯 言葉クイズ</button>
+      </div>
+      <div id="tc-cards-area">
+        <p class="muted">カードをタップすると、意味が見られるよ。</p>
+        <div id="tc-list"></div>
+      </div>
+      <div id="tc-quiz-area" hidden>
+        <label for="wq-mode">クイズの出し方</label>
+        <select id="wq-mode">
+          <option value="meaning2term">意味 → 用語</option>
+          <option value="term2meaning">用語 → 意味</option>
+        </select>
+        <button class="primary" id="wq-start" style="width:100%">言葉クイズを始める（5問）</button>
+        <p class="muted" id="wq-message"></p>
+        <div id="wq-panel" hidden>
+          <p class="muted" id="wq-count"></p>
+          <div class="qtext" id="wq-question"></div>
+          <div id="wq-choices"></div>
+          <p id="wq-feedback"></p>
+          <button class="primary" id="wq-next" style="width:100%" hidden>次の問題</button>
+        </div>
+        <div id="wq-result" hidden>
+          <p class="big" id="wq-score"></p>
+          <div id="wq-missed"></div>
+        </div>
+        <p class="muted">言葉クイズの結果は、学習記録には残らないよ（パソコン版と同じ）。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 要点まとめ -->
+  <section id="view-yoten" hidden>
+    <div class="panel">
+      <h2>要点まとめ</h2>
+      <label for="yt-subject">科目</label>
+      <select id="yt-subject"></select>
+      <label for="yt-topic">テーマ</label>
+      <select id="yt-topic"></select>
+      <p class="muted">画像をタップすると大きく見られるよ。</p>
+      <img class="yoten" id="yt-img" alt="要点まとめ画像">
+    </div>
+  </section>
+
+  <!-- 記録・統計 -->
+  <section id="view-stats" hidden>
+    <div class="panel">
+      <h2>記録・統計</h2>
+      <div id="stats-summary"></div>
+    </div>
+    <div class="panel">
+      <h2>科目ごとの進み具合</h2>
+      <div id="stats-subjects"></div>
+    </div>
+    <div class="panel">
+      <h2>学習時間</h2>
+      <div id="stats-time"></div>
+      <p class="muted">学習時間は、パソコン版の集中タイマーで記録したものだよ。</p>
+    </div>
+  </section>
+
+  <!-- 設定 -->
+  <section id="view-settings" hidden>
+    <div class="panel">
+      <h2>文字の大きさ</h2>
+      <p class="muted">画面の文字の大きさを変えられるよ（この端末に保存されます）。</p>
+      <div class="seg" id="fontsize-seg">
+        <button data-size="xsmall">特小</button>
+        <button data-size="small">小</button>
+        <button data-size="normal">標準</button>
+        <button data-size="large">大きめ</button>
+        <button data-size="xlarge">特大</button>
+      </div>
+      <h2>フリガナ</h2>
+      <div class="seg" id="ruby-seg">
+        <button data-ruby="1">つける</button>
+        <button data-ruby="0">つけない</button>
+      </div>
+      <h3>フリガナの大きさ</h3>
+      <div class="seg" id="rubysize-seg">
+        <button data-rsize="xsmall">特小</button>
+        <button data-rsize="small">小</button>
+        <button data-rsize="normal">標準</button>
+      </div>
+      <p class="muted">フリガナは、用語カードの読みに表示されるよ。</p>
+    </div>
+    <div class="panel">
+      <h2>アカウント</h2>
+      <p class="muted" id="account-info"></p>
+      <button id="sync-btn" class="secondary" style="width:100%">今すぐ読み直す（同期）</button>
+      <p class="muted" id="sync-note"></p>
+    </div>
+  </section>
+</main>
+
+<nav id="tabbar" hidden>
+  <button data-view="home" class="active"><span class="ic">🏠</span>ホーム</button>
+  <button data-view="themes"><span class="ic">✏️</span>問題</button>
+  <button data-view="wrong"><span class="ic">📒</span>間違い</button>
+  <button data-view="terms"><span class="ic">🃏</span>用語</button>
+  <button data-view="yoten"><span class="ic">🖼️</span>要点</button>
+  <button data-view="stats"><span class="ic">📊</span>記録</button>
+  <button data-view="settings"><span class="ic">⚙️</span>設定</button>
+</nav>
+
+<div id="lightbox"><img id="lightbox-img" alt="要点まとめ画像（拡大）"></div>
+<div id="toast"></div>
+
+<script src="data/themes.js"></script>
+<script src="data/seeds.js"></script>
+<script src="data/terms.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script>
+"use strict";
+/* ============================================================
+   学習サポートAI（スマホ版）v1.0
+   - AIなし。シード問題・用語カード・要点画像は同梱の静的データ。
+   - 記録は Firebase（study-support-ai-4a4dd）の users/{uid}/data に、
+     パソコン版 v0.9.0 の同期形式そのままで読み書きする。
+     1ドキュメント＝1行：ドキュメント名 {table}__{sync_key}、
+     フィールド row_json（行全体のJSON文字列）/_table/_updated_at(ms整数)/_origin。
+   - 教科書の本文・教科書由来データは含まない（パソコン版のみの決定）。
+   ============================================================ */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDVaNKrDJw-rZlRhVf5whU3iRWhR7xbmUY",
+  authDomain: "study-support-ai-4a4dd.firebaseapp.com",
+  projectId: "study-support-ai-4a4dd",
+  storageBucket: "study-support-ai-4a4dd.firebasestorage.app",
+  messagingSenderId: "77369738259",
+  appId: "1:77369738259:web:190734ab9e305a4535abe6"
+};
+const FS_BASE = "https://firestore.googleapis.com/v1/projects/" +
+  FIREBASE_CONFIG.projectId + "/databases/(default)/documents";
+
+/* ---------- 小物 ---------- */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? "" : s)
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;");
+function toast(msg, long) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.style.display = "block";
+  clearTimeout(toast._h);
+  toast._h = setTimeout(() => { t.style.display = "none"; }, long ? 5200 : 2800);
+}
+function shuffleArr(a) {
+  const arr = a.slice();
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+function randHex(bytes) {
+  const b = new Uint8Array(bytes);
+  (window.crypto || {}).getRandomValues
+    ? crypto.getRandomValues(b)
+    : b.forEach((_, i) => { b[i] = Math.floor(Math.random() * 256); });
+  return [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+/* パソコン版 shuffle_choices と同じ：choice 形式だけ選択肢を混ぜ、正解位置を付け替える */
+function shuffleChoices(choices, correctIndex, fmt) {
+  if (fmt !== "choice" || correctIndex < 0 || !choices || choices.length < 2) {
+    return { choices: (choices || []).slice(), correct: correctIndex };
+  }
+  const idx = shuffleArr(choices.map((_, i) => i));
+  return { choices: idx.map((i) => choices[i]), correct: idx.indexOf(correctIndex) };
+}
+/* パソコン版 normalize_text と同じ採点（穴埋め） */
+function normalizeText(s) {
+  let t = String(s || "").replace(/\s+/g, "").toLowerCase();
+  t = t.replace(/^[。．、,・「」『』（）()]+/, "").replace(/[。．、,・「」『』（）()]+$/, "");
+  return t;
+}
+/* JST の日付（YYYY-MM-DD） */
+function jstDateStr(d) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit"
+  }).formatToParts(d || new Date());
+  const g = (t) => parts.find((p) => p.type === t).value;
+  return g("year") + "-" + g("month") + "-" + g("day");
+}
+function todayJST() { return jstDateStr(new Date()); }
+function dateAdd(iso, days) {
+  const d = new Date(iso + "T00:00:00+09:00");
+  d.setDate(d.getDate() + days);
+  return jstDateStr(d);
+}
+function daysBetween(aIso, bIso) {
+  const a = new Date(aIso + "T00:00:00+09:00").getTime();
+  const b = new Date(bIso + "T00:00:00+09:00").getTime();
+  return Math.round((b - a) / 86400000);
+}
+const nowSec = () => Math.floor(Date.now() / 1000);
+
+/* ---------- 表示設定（パソコン版 v0.9.2 と同じ考え方・同じ保存キー） ---------- */
+function applyFontSize(size) {
+  document.documentElement.dataset.fontsize = size;
+  localStorage.setItem("ssai_fontsize", size);
+  document.querySelectorAll("#fontsize-seg button").forEach((b) =>
+    b.classList.toggle("selected", b.dataset.size === size));
+}
+function applyRubySize(size) {
+  document.documentElement.dataset.rubysize = size;
+  localStorage.setItem("ssai_rubysize", size);
+  document.querySelectorAll("#rubysize-seg button").forEach((b) =>
+    b.classList.toggle("selected", b.dataset.rsize === size));
+}
+let rubyOn = localStorage.getItem("studyRuby") !== "0";
+function syncRubyUi() {
+  document.querySelectorAll("#ruby-seg button").forEach((b) =>
+    b.classList.toggle("selected", (b.dataset.ruby === "1") === rubyOn));
+}
+function setRubyOn(on) {
+  rubyOn = !!on;
+  localStorage.setItem("studyRuby", rubyOn ? "1" : "0");
+  syncRubyUi();
+  renderTermCards();
+}
+function rubyTerm(c) {
+  if (rubyOn && c.reading) {
+    return "<ruby>" + esc(c.term) + "<rt>" + esc(c.reading) + "</rt></ruby>";
+  }
+  return esc(c.term);
+}
+
+/* ---------- Firebase（Auth は SDK、Firestore は REST で形式を厳密に合わせる） ---------- */
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth = firebase.auth();
+let currentUser = null;
+
+const AUTH_ERRORS = {
+  "auth/email-already-in-use": "このメールアドレスは、すでに登録されています。",
+  "auth/user-not-found": "このメールアドレスのアカウントが見つかりませんでした。先にパソコン版で登録してね。",
+  "auth/wrong-password": "パスワードが違います。",
+  "auth/invalid-credential": "メールアドレスかパスワードが違います。",
+  "auth/invalid-email": "メールアドレスの形が正しくありません。",
+  "auth/weak-password": "パスワードが短すぎます。6文字以上にしてね。",
+  "auth/user-disabled": "このアカウントは使えなくなっています。",
+  "auth/too-many-requests": "試行が多すぎます。少し時間を置いてから試してね。",
+  "auth/network-request-failed": "ネットに接続できませんでした。接続を確認してね。"
+};
+
+async function fsToken() { return currentUser.getIdToken(); }
+
+async function fsListAll() {
+  const token = await fsToken();
+  const out = new Map();
+  let pageToken = null;
+  do {
+    let url = FS_BASE + "/users/" + currentUser.uid + "/data?pageSize=1000";
+    if (pageToken) url += "&pageToken=" + encodeURIComponent(pageToken);
+    const r = await fetch(url, { headers: { Authorization: "Bearer " + token } });
+    if (!r.ok) throw new Error("firestore-list-" + r.status);
+    const data = await r.json();
+    for (const doc of data.documents || []) {
+      const docId = (doc.name || "").split("/").pop();
+      const f = doc.fields || {};
+      if (!docId || !f.row_json || f.row_json.stringValue == null) continue;
+      let row;
+      try { row = JSON.parse(f.row_json.stringValue); } catch (e) { continue; }
+      const table = (f._table && f._table.stringValue) || docId.split("__")[0];
+      const updated = parseInt((f._updated_at && f._updated_at.integerValue) || "0", 10) || 0;
+      out.set(docId, { table: table, updated_at: updated, row: row });
+    }
+    pageToken = data.nextPageToken || null;
+  } while (pageToken);
+  return out;
+}
+
+async function fsPutDoc(docId, table, row, updatedMs) {
+  const token = await fsToken();
+  const url = FS_BASE + "/users/" + currentUser.uid + "/data/" + encodeURIComponent(docId);
+  const body = { fields: {
+    row_json: { stringValue: JSON.stringify(row) },
+    _table: { stringValue: table },
+    _updated_at: { integerValue: String(updatedMs) },
+    _origin: { stringValue: "mobile" }
+  } };
+  const r = await fetch(url, {
+    method: "PATCH",
+    headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error("firestore-put-" + r.status);
+}
+
+/* ---------- 同期データの保持と書き込み（失敗分は端末に控えて再送する） ---------- */
+const DB = {
+  docs: new Map(),       // docId -> {table, updated_at, row}
+  attempts: [],          // [{key, row}] created_at 昇順
+  review: new Map(),     // sync_key -> {row, updated_at}
+  settings: null,        // user_settings の row
+  reports: [],           // reports の row（_topics 付き）
+  sessions: [],          // study_sessions の row
+  served: new Set(),     // user_served_stock の stock_id
+  loaded: false
+};
+const PENDING_KEY = "ssai_mobile_pending_v1";
+
+function rebuildIndexes() {
+  DB.attempts = [];
+  DB.review = new Map();
+  DB.settings = null;
+  DB.reports = [];
+  DB.sessions = [];
+  DB.served = new Set();
+  for (const [docId, d] of DB.docs) {
+    const key = docId.slice(docId.indexOf("__") + 2);
+    if (d.table === "attempts") DB.attempts.push({ key: key, row: d.row });
+    else if (d.table === "review_schedule") DB.review.set(key, { row: d.row, updated_at: d.updated_at });
+    else if (d.table === "user_settings") DB.settings = d.row;
+    else if (d.table === "reports") DB.reports.push(d.row);
+    else if (d.table === "study_sessions") DB.sessions.push(d.row);
+    else if (d.table === "user_served_stock") DB.served.add(d.row.stock_id);
+  }
+  DB.attempts.sort((a, b) => (a.row.created_at || 0) - (b.row.created_at || 0));
+}
+
+async function loadAll() {
+  DB.docs = await fsListAll();
+  rebuildIndexes();
+  DB.loaded = true;
+  await flushPending();
+}
+
+function loadPending() {
+  try { return JSON.parse(localStorage.getItem(PENDING_KEY) || "[]"); }
+  catch (e) { return []; }
+}
+function savePending(list) {
+  try { localStorage.setItem(PENDING_KEY, JSON.stringify(list)); } catch (e) {}
+}
+/* 1行を保存する。成功したら true、通信失敗なら控えて false（入力は消えない）。 */
+async function saveRow(table, syncKey, row) {
+  const docId = table + "__" + syncKey;
+  const prev = DB.docs.get(docId);
+  const updatedMs = Math.max(Date.now(), (prev ? prev.updated_at : 0) + 1);
+  try {
+    await fsPutDoc(docId, table, row, updatedMs);
+    DB.docs.set(docId, { table: table, updated_at: updatedMs, row: row });
+    rebuildIndexes();
+    return true;
+  } catch (e) {
+    const list = loadPending().filter((p) => p.docId !== docId);
+    list.push({ docId: docId, table: table, row: row, updatedMs: updatedMs });
+    savePending(list);
+    DB.docs.set(docId, { table: table, updated_at: updatedMs, row: row });
+    rebuildIndexes();
+    return false;
+  }
+}
+async function flushPending() {
+  const list = loadPending();
+  if (!list.length || !currentUser) return;
+  const rest = [];
+  for (const p of list) {
+    try { await fsPutDoc(p.docId, p.table, p.row, p.updatedMs); }
+    catch (e) { rest.push(p); }
+  }
+  savePending(rest);
+  if (list.length && !rest.length) toast("控えていた記録を送れたよ");
+}
+window.addEventListener("online", () => { flushPending(); });
+</script>
+<script>
+"use strict";
+/* ============================================================
+   学習の記録（パソコン版 backend の規則をそのまま写したもの）
+   - attempts: 回答のたびにスナップショットを1行追加する
+   - review_schedule: update_review_schedule と同じ前進規則
+     （カスタム間隔 user_settings.review_intervals があればそちら、
+      無ければモード別：exam=[1,2,5]／deep=[1,3,7]）
+   - user_served_stock: 出題したシード問題を記録する
+   ============================================================ */
+function reviewIntervals() {
+  const s = DB.settings || {};
+  if (s.review_intervals) {
+    try {
+      const p = JSON.parse(s.review_intervals);
+      if (Array.isArray(p) && p.length &&
+          p.every((x) => Number.isInteger(x) && x >= 1 && x <= 60)) return p;
+    } catch (e) { /* 壊れていたら標準に戻す */ }
+  }
+  return s.mode === "deep" ? [1, 3, 7] : [1, 2, 5];
+}
+function isCustomIntervals() {
+  const s = DB.settings || {};
+  if (!s.review_intervals) return false;
+  try {
+    const p = JSON.parse(s.review_intervals);
+    return Array.isArray(p) && p.length &&
+      p.every((x) => Number.isInteger(x) && x >= 1 && x <= 60);
+  } catch (e) { return false; }
+}
+
+/* 復習スケジュール1行を、回答結果に合わせて前進させた新しい row を返す */
+function advanceReviewRow(row, isCorrect) {
+  const r = Object.assign({}, row);
+  const today = todayJST();
+  const now = nowSec();
+  const custom = isCustomIntervals() ? reviewIntervals() : null;
+  if (custom) {
+    let ease = typeof r.ease === "number" && r.ease ? r.ease : 2.0;
+    const lastIv = r.last_interval_days || 0;
+    if (isCorrect) {
+      ease = Math.min(2.5, ease + 0.05);
+      if (r.stage >= custom.length - 1 && (!lastIv || lastIv >= custom[custom.length - 1])) {
+        r.done = 1; r.ease = ease; r.updated_at = now;
+      } else {
+        const nxt = Math.min(r.stage + 1, custom.length - 1);
+        const iv = Math.max(custom[nxt], Math.round((lastIv || custom[0]) * ease));
+        r.stage = nxt; r.due_date = dateAdd(today, iv);
+        r.last_interval_days = iv; r.ease = ease; r.updated_at = now;
+      }
+    } else {
+      ease = Math.max(1.3, ease - 0.2);
+      r.stage = 0; r.due_date = dateAdd(today, custom[0]);
+      r.last_interval_days = custom[0]; r.ease = ease; r.updated_at = now;
+    }
+    return r;
+  }
+  const intervals = reviewIntervals();
+  if (isCorrect) {
+    if (r.stage >= intervals.length - 1) {
+      r.done = 1; r.updated_at = now;
+    } else {
+      r.stage = r.stage + 1;
+      r.due_date = dateAdd(today, intervals[r.stage]);
+      r.updated_at = now;
+    }
+  } else {
+    r.stage = 0;
+    r.due_date = dateAdd(today, intervals[0]);
+    r.updated_at = now;
+  }
+  return r;
+}
+
+/* 通常問題で間違えたときの新規登録（同じ問題の未完了エントリがあれば作らない） */
+function newReviewRow(q) {
+  const intervals = reviewIntervals();
+  const custom = isCustomIntervals();
+  const now = nowSec();
+  return {
+    user_id: 0,
+    subject: q.subject, topic: q.topic, format: q.format,
+    difficulty: q.difficulty, question: q.question,
+    choices: JSON.stringify(q.choices), correct_index: q.correct,
+    answer_text: q.answer_text || "", explanation: q.explanation || "",
+    stage: 0, due_date: dateAdd(todayJST(), intervals[0]), done: 0,
+    created_at: now, updated_at: now,
+    last_interval_days: custom ? intervals[0] : 0, ease: 2.0
+  };
+}
+
+/* 出題したシード問題を「出題済み」に記録する（パソコン版と同じ） */
+async function markServed(stockId) {
+  if (!stockId || DB.served.has(stockId)) return;
+  DB.served.add(stockId);
+  await saveRow("user_served_stock", randHex(16),
+    { user_id: 0, stock_id: stockId, served_at: nowSec() });
+}
+
+/* 回答を記録する。q は出題形（choices は出題した並び、correct はその位置）。
+   reviewKey があれば復習由来としてスケジュールを前進させる。
+   戻り値: 全て保存できたら true、一部が控え（オフライン等）になったら false */
+async function recordAnswer(q, selectedIndex, selectedText, isCorrect, reviewKey) {
+  const now = nowSec();
+  const attempt = {
+    user_id: 0,
+    subject: q.subject, topic: q.topic, format: q.format,
+    difficulty: q.difficulty, question: q.question,
+    choices: JSON.stringify(q.choices), correct_index: q.correct,
+    answer_text: q.answer_text || "", explanation: q.explanation || "",
+    selected_index: selectedIndex, selected_text: selectedText || "",
+    is_correct: isCorrect ? 1 : 0, created_at: now,
+    confidence: "", wrong_reason: "", exam_session_id: "", difficulty_feel: ""
+  };
+  let ok = await saveRow("attempts", randHex(16), attempt);
+  if (reviewKey) {
+    const cur = DB.review.get(reviewKey);
+    if (cur && !cur.row.done) {
+      const next = advanceReviewRow(cur.row, isCorrect);
+      ok = (await saveRow("review_schedule", reviewKey, next)) && ok;
+    }
+  } else if (!isCorrect) {
+    const exists = [...DB.review.values()].some((e) =>
+      !e.row.done && e.row.question === q.question);
+    if (!exists) {
+      ok = (await saveRow("review_schedule", randHex(16), newReviewRow(q))) && ok;
+    }
+  }
+  return ok;
+}
+
+/* ---------- 出題セッション（テーマ／復習／間違い直し共通） ---------- */
+let session = null; // {kind, items:[q], idx, score, answered}
+function prepareFromSeed(seed) {
+  const sh = shuffleChoices(seed.choices || [], seed.correct_index, seed.format);
+  return {
+    subject: seed.subject, topic: seed.topic, format: seed.format,
+    difficulty: seed.difficulty, question: seed.question,
+    choices: sh.choices, correct: sh.correct,
+    answer_text: seed.answer_text || "", explanation: seed.explanation || "",
+    stock_id: seed.id
+  };
+}
+function prepareFromSnapshot(subject, topic, format, difficulty, question,
+                             choicesJson, correctIndex, answerText, explanation) {
+  let choices = [];
+  try { choices = JSON.parse(choicesJson || "[]"); } catch (e) { choices = []; }
+  const sh = shuffleChoices(choices, correctIndex, format);
+  return {
+    subject: subject, topic: topic, format: format, difficulty: difficulty,
+    question: question, choices: sh.choices, correct: sh.correct,
+    answer_text: answerText || "", explanation: explanation || ""
+  };
+}
+function startThemeSession(subject, topic) {
+  const pool = (window.SSAI_SEEDS || []).filter((s) => s.subject === subject && s.topic === topic);
+  const unserved = shuffleArr(pool.filter((s) => !DB.served.has(s.id)));
+  const served = shuffleArr(pool.filter((s) => DB.served.has(s.id)));
+  const items = unserved.concat(served).slice(0, 10).map(prepareFromSeed);
+  if (!items.length) { toast("このテーマの問題が見つからなかったよ"); return; }
+  beginSession("theme", items, subject + "｜" + topic);
+}
+function dueReviewRows() {
+  const today = todayJST();
+  return [...DB.review.entries()]
+    .filter(([, e]) => !e.row.done && e.row.due_date <= today)
+    .sort((a, b) => (a[1].row.due_date < b[1].row.due_date ? -1 :
+                     a[1].row.due_date > b[1].row.due_date ? 1 : 0))
+    .map(([key, e]) => ({ key: key, row: e.row }));
+}
+function startReviewSession() {
+  const due = dueReviewRows();
+  if (!due.length) { toast("今日の復習はないよ"); return; }
+  const items = due.map((d) => {
+    const q = prepareFromSnapshot(d.row.subject, d.row.topic, d.row.format,
+      d.row.difficulty, d.row.question, d.row.choices, d.row.correct_index,
+      d.row.answer_text, d.row.explanation);
+    q.reviewKey = d.key;
+    return q;
+  });
+  beginSession("review", items, "今日の復習");
+}
+function todayWrongAttempts() {
+  const today = todayJST();
+  const seen = new Set();
+  const out = [];
+  const todays = DB.attempts.filter((a) =>
+    !a.row.is_correct && jstDateStr(new Date((a.row.created_at || 0) * 1000)) === today);
+  for (let i = todays.length - 1; i >= 0; i--) {
+    const q = todays[i].row.question;
+    if (seen.has(q)) continue;
+    seen.add(q);
+    out.push(todays[i].row);
+  }
+  return out;
+}
+function startRedoSession() {
+  const wrongs = todayWrongAttempts();
+  if (!wrongs.length) { toast("今日の間違いはないよ"); return; }
+  const items = wrongs.map((r) => prepareFromSnapshot(r.subject, r.topic, r.format,
+    r.difficulty, r.question, r.choices, r.correct_index, r.answer_text, r.explanation));
+  beginSession("redo", items, "今日の間違い直し");
+}
+function beginSession(kind, items, label) {
+  session = { kind: kind, items: items, idx: 0, score: 0, answered: false, label: label };
+  showView("quiz");
+  $("quiz-result").hidden = true;
+  renderQuizItem();
+}
+function renderQuizItem() {
+  const q = session.items[session.idx];
+  session.answered = false;
+  $("quiz-count").textContent = (session.idx + 1) + " / " + session.items.length + " 問目";
+  $("quiz-where").textContent = session.label + "｜" + q.subject + "｜" + q.topic;
+  $("quiz-question").textContent = q.question;
+  $("quiz-feedback").textContent = "";
+  $("quiz-explanation").hidden = true;
+  $("quiz-explanation").textContent = "";
+  $("quiz-next").hidden = true;
+  $("quiz-save-note").textContent = "";
+  const box = $("quiz-choices");
+  box.innerHTML = "";
+  const isFillin = q.format === "fillin";
+  $("quiz-fillin").hidden = !isFillin;
+  if (isFillin) {
+    $("quiz-answer-text").value = "";
+  } else {
+    q.choices.forEach((c, i) => {
+      const b = document.createElement("button");
+      b.className = "choice";
+      b.textContent = c;
+      b.addEventListener("click", () => answerCurrent(i, c));
+      box.appendChild(b);
+    });
+  }
+  if (q.stock_id) markServed(q.stock_id);
+}
+async function answerCurrent(selectedIndex, selectedText) {
+  if (!session || session.answered) return;
+  const q = session.items[session.idx];
+  let isCorrect;
+  if (q.format === "fillin") {
+    const input = $("quiz-answer-text").value;
+    selectedText = input;
+    selectedIndex = -1;
+    isCorrect = normalizeText(input) === normalizeText(q.answer_text);
+  } else {
+    isCorrect = selectedIndex === q.correct;
+  }
+  session.answered = true;
+  if (isCorrect) session.score += 1;
+  // 画面の反応（選んだ答えはその場に残す＝入力が消えない）
+  [...$("quiz-choices").children].forEach((b, i) => {
+    b.disabled = true;
+    if (i === q.correct) b.classList.add("correct");
+    else if (i === selectedIndex) b.classList.add("wrong");
+  });
+  $("quiz-submit-text").disabled = true;
+  const fb = $("quiz-feedback");
+  if (isCorrect) {
+    fb.innerHTML = "<span class='ok'>⭕ 正解だよ</span>";
+  } else {
+    const correctText = q.format === "fillin" ? q.answer_text
+      : (q.choices[q.correct] != null ? q.choices[q.correct] : "");
+    fb.innerHTML = "<span class='bad'>❌ 残念</span>" +
+      (correctText ? "　正解は「" + esc(correctText) + "」だよ。" : "");
+  }
+  const ex = $("quiz-explanation");
+  ex.textContent = q.explanation || "";
+  ex.hidden = !q.explanation;
+  $("quiz-next").hidden = false;
+  $("quiz-next").textContent =
+    session.idx + 1 >= session.items.length ? "結果を見る" : "次の問題";
+  $("quiz-submit-text").disabled = false;
+  const saved = await recordAnswer(q, selectedIndex, selectedText, isCorrect, q.reviewKey || null);
+  if (!saved) {
+    $("quiz-save-note").textContent =
+      "通信できなかったので、記録はこの端末に控えたよ。つながったら自動で送るね。";
+  }
+}
+function nextQuizItem() {
+  if (!session) return;
+  session.idx += 1;
+  if (session.idx >= session.items.length) {
+    $("quiz-result-text").textContent =
+      session.items.length + "問中 " + session.score + "問正解だったよ。";
+    $("quiz-result").hidden = false;
+    session = null;
+    renderHome();
+    return;
+  }
+  renderQuizItem();
+}
+</script>
+<script>
+"use strict";
+/* ============================================================
+   画面の描画とナビゲーション
+   ============================================================ */
+const VIEWS = ["login", "home", "themes", "quiz", "wrong", "terms", "yoten", "stats", "settings"];
+function showView(name) {
+  VIEWS.forEach((v) => { $("view-" + v).hidden = v !== name; });
+  document.querySelectorAll("#tabbar button").forEach((b) =>
+    b.classList.toggle("active", b.dataset.view === name));
+  window.scrollTo(0, 0);
+}
+function attemptStatsByTopic() {
+  const m = new Map();
+  for (const a of DB.attempts) {
+    const k = a.row.subject + "||" + a.row.topic;
+    const e = m.get(k) || { total: 0, correct: 0 };
+    e.total += 1;
+    if (a.row.is_correct) e.correct += 1;
+    m.set(k, e);
+  }
+  return m;
+}
+
+/* ---------- ホーム：今日やる学習 ---------- */
+function computeRecommendations() {
+  const THEMES = window.SSAI_THEMES;
+  const stats = attemptStatsByTopic();
+  const today = todayJST();
+  const recs = [];
+  const seen = new Set();
+  // レポート優先（期限14日以内・未提出・進み具合100%未満のテーマ）
+  for (const rep of DB.reports) {
+    if (rep.submitted || !rep.deadline) continue;
+    const left = daysBetween(today, rep.deadline);
+    if (left > 14) continue;
+    for (const tp of rep._topics || []) {
+      const key = rep.subject + "||" + tp;
+      const st = stats.get(key);
+      const progress = st ? Math.min(100, st.total * 10) : 0;
+      if (progress >= 100 || seen.has(key)) continue;
+      seen.add(key);
+      recs.push({ subject: rep.subject, topic: tp,
+        reason: "レポート「" + (rep.name || "") + "」の期限が近いです" });
+    }
+  }
+  // 科目の偏り防止：進んでいるテーマの割合が小さい科目から、未着手→浅いテーマ
+  let priority = [];
+  try { priority = JSON.parse((DB.settings || {}).subject_priority || "[]"); }
+  catch (e) { priority = []; }
+  const ratio = {};
+  for (const s of THEMES.subjects) {
+    const tps = THEMES.topics[s] || [];
+    const done = tps.filter((tp) => stats.has(s + "||" + tp)).length;
+    ratio[s] = tps.length ? done / tps.length : 1;
+  }
+  const ordered = THEMES.subjects.slice().sort((a, b) => {
+    const pa = priority.indexOf(a), pb = priority.indexOf(b);
+    const ka = pa < 0 ? 99 : pa, kb = pb < 0 ? 99 : pb;
+    return ka - kb || ratio[a] - ratio[b];
+  });
+  for (const s of ordered) {
+    const tps = THEMES.topics[s] || [];
+    let pick = tps.find((tp) => !stats.has(s + "||" + tp));
+    let reason = ratio[s] < 0.3 ? "まだ進んでいない科目を優先しています" : "次の新しいテーマです";
+    if (!pick) {
+      let best = null, bestTotal = Infinity;
+      for (const tp of tps) {
+        const st = stats.get(s + "||" + tp);
+        if (st && st.total < bestTotal) { bestTotal = st.total; best = tp; }
+      }
+      pick = best;
+      reason = "進み具合が浅いテーマです";
+    }
+    if (pick && !seen.has(s + "||" + pick)) {
+      seen.add(s + "||" + pick);
+      recs.push({ subject: s, topic: pick, reason: reason });
+    }
+    if (recs.length >= 3) break;
+  }
+  return recs.slice(0, 3);
+}
+function renderHome() {
+  if (!DB.loaded) return;
+  const due = dueReviewRows().length;
+  const wrongs = todayWrongAttempts();
+  const recs = computeRecommendations();
+  const today = todayJST();
+  const nearReports = DB.reports
+    .filter((r) => !r.submitted && r.deadline && daysBetween(today, r.deadline) <= 7)
+    .sort((a, b) => (a.deadline < b.deadline ? -1 : 1));
+  const attemptedToday = DB.attempts.some((a) =>
+    jstDateStr(new Date((a.row.created_at || 0) * 1000)) === today);
+  const items = [];
+  items.push({ icon: "🔁", title: "今日の復習",
+    detail: due ? due + "問あるよ" : "今日の復習はないよ",
+    done: due === 0, action: due ? () => startReviewSession() : null });
+  recs.forEach((r) => {
+    const doneToday = DB.attempts.some((a) =>
+      a.row.subject === r.subject && a.row.topic === r.topic &&
+      jstDateStr(new Date((a.row.created_at || 0) * 1000)) === today);
+    items.push({ icon: "📖", title: "予習と問題：" + r.subject + "｜" + r.topic,
+      detail: r.reason, done: doneToday,
+      action: () => startThemeSession(r.subject, r.topic) });
+  });
+  items.push({ icon: "📒", title: "今日の間違い直し",
+    detail: wrongs.length ? "今日間違えた問題が " + wrongs.length + "問あるよ" : "今日の間違いはないよ",
+    done: wrongs.length === 0, action: wrongs.length ? () => startRedoSession() : null });
+  nearReports.forEach((r) => {
+    const left = daysBetween(today, r.deadline);
+    items.push({ icon: "📝", title: "レポート：" + (r.name || "") + "（" + r.subject + "）",
+      detail: "提出期限 " + r.deadline + "（" + (left < 0 ? "期限を過ぎています" :
+        left === 0 ? "今日まで" : "あと" + left + "日") + "）",
+      done: false, action: null });
+  });
+  const doneCount = items.filter((i) => i.done).length;
+  $("today-progress").textContent = items.length + "件中 " + doneCount + "件 おわり";
+  $("today-empty").hidden = !(items.length && doneCount === items.length);
+  const list = $("today-list");
+  list.innerHTML = "";
+  items.forEach((it) => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = "<div class='mark'>" + (it.done ? "✅" : it.icon) + "</div>" +
+      "<div class='body'><strong>" + esc(it.title) + "</strong><br>" +
+      "<span class='muted'>" + esc(it.detail) + "</span></div>";
+    if (it.action) {
+      const b = document.createElement("button");
+      b.className = "primary";
+      b.textContent = "始める";
+      b.addEventListener("click", it.action);
+      div.appendChild(b);
+    }
+    list.appendChild(div);
+  });
+  $("mimi-rec").textContent = recs.length
+    ? "今日は「" + recs[0].subject + "｜" + recs[0].topic + "」がおすすめだよ。" + recs[0].reason + "。"
+    : (attemptedToday ? "今日も勉強できたね。この調子でいこう。" : "まずは1テーマ、始めてみよう。");
+}
+
+/* ---------- テーマ選択 ---------- */
+function renderThemes() {
+  const THEMES = window.SSAI_THEMES;
+  const sel = $("theme-subject");
+  if (!sel.options.length) {
+    THEMES.subjects.forEach((s) => {
+      const o = document.createElement("option");
+      o.value = s; o.textContent = s;
+      sel.appendChild(o);
+    });
+  }
+  const subject = sel.value || THEMES.subjects[0];
+  const stats = attemptStatsByTopic();
+  const list = $("theme-list");
+  list.innerHTML = "";
+  (THEMES.topics[subject] || []).forEach((tp) => {
+    const st = stats.get(subject + "||" + tp);
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = "<div class='body'><strong>" + esc(tp) + "</strong><br>" +
+      "<span class='muted'>" + (st ? st.total + "問解いて " + st.correct + "問正解" : "まだ解いていないテーマ") +
+      "</span></div>";
+    const b = document.createElement("button");
+    b.className = "primary";
+    b.textContent = "解く";
+    b.addEventListener("click", () => startThemeSession(subject, tp));
+    div.appendChild(b);
+    list.appendChild(div);
+  });
+}
+
+/* ---------- 間違いノート ---------- */
+function wrongNoteItems() {
+  const wrongs = DB.attempts.filter((a) => !a.row.is_correct);
+  const corrects = DB.attempts.filter((a) => a.row.is_correct);
+  const laterCorrect = new Map();
+  const out = [];
+  // パソコン版と同じ「卒業」判定：その後に2回以上正解した問題は外す
+  const order = DB.attempts.map((a, i) => i);
+  for (const ci of order) {
+    if (!DB.attempts[ci].row.is_correct) continue;
+    laterCorrect.set(normalizeText(DB.attempts[ci].row.question),
+      (laterCorrect.get(normalizeText(DB.attempts[ci].row.question)) || []).concat(ci));
+  }
+  let graduated = 0;
+  const idxOf = new Map(DB.attempts.map((a, i) => [a, i]));
+  for (let i = wrongs.length - 1; i >= 0; i--) {
+    const a = wrongs[i];
+    const myIdx = idxOf.get(a);
+    const later = (laterCorrect.get(normalizeText(a.row.question)) || [])
+      .filter((ci) => ci > myIdx).length;
+    if (later >= 2) { graduated += 1; continue; }
+    out.push(a.row);
+    if (out.length >= 50) break;
+  }
+  return { items: out, graduated: graduated };
+}
+function renderWrong() {
+  const { items, graduated } = wrongNoteItems();
+  const wrongs = todayWrongAttempts();
+  $("wrong-summary").textContent = items.length
+    ? "間違えた問題が " + items.length + "問あるよ" +
+      (graduated ? "（その後できるようになった問題 " + graduated + "問は卒業したよ）" : "")
+    : "間違えた問題はまだないよ。";
+  $("wrong-redo-btn").hidden = !wrongs.length;
+  const list = $("wrong-list");
+  list.innerHTML = "";
+  items.forEach((r) => {
+    const div = document.createElement("div");
+    div.className = "card-term";
+    const correctText = r.format === "fillin" ? r.answer_text
+      : (() => { try { return JSON.parse(r.choices || "[]")[r.correct_index] || ""; }
+                 catch (e) { return ""; } })();
+    div.innerHTML = "<span class='badge'>" + esc(r.subject) + "｜" + esc(r.topic) + "</span>" +
+      "<div class='term' style='font-size:1em'>" + esc(r.question) + "</div>" +
+      (correctText ? "<div class='meaning'>正解：<strong>" + esc(correctText) + "</strong></div>" : "") +
+      (r.explanation ? "<div class='muted'>" + esc(r.explanation) + "</div>" : "");
+    list.appendChild(div);
+  });
+}
+
+/* ---------- 用語カード・言葉クイズ ---------- */
+function currentTermEntry() {
+  const s = $("tc-subject").value;
+  const t = $("tc-topic").value;
+  const subj = (window.SSAI_TERMS || []).find((x) => x.subject === s);
+  if (!subj) return { cards: [] };
+  const topic = subj.topics.find((x) => x.topic === t) || subj.topics[0];
+  return topic || { cards: [] };
+}
+function fillTermSelects() {
+  const THEMES = window.SSAI_THEMES;
+  const sSel = $("tc-subject"), tSel = $("tc-topic");
+  if (!sSel.options.length) {
+    THEMES.subjects.forEach((s) => {
+      const o = document.createElement("option");
+      o.value = s; o.textContent = s;
+      sSel.appendChild(o);
+    });
+  }
+  const subj = (window.SSAI_TERMS || []).find((x) => x.subject === sSel.value);
+  const cur = tSel.value;
+  tSel.innerHTML = "";
+  (subj ? subj.topics : []).forEach((t) => {
+    const o = document.createElement("option");
+    o.value = t.topic; o.textContent = t.topic;
+    tSel.appendChild(o);
+  });
+  if (cur && [...tSel.options].some((o) => o.value === cur)) tSel.value = cur;
+}
+function renderTermCards() {
+  fillTermSelects();
+  const entry = currentTermEntry();
+  const list = $("tc-list");
+  list.innerHTML = "";
+  (entry.cards || []).forEach((c) => {
+    const div = document.createElement("div");
+    div.className = "card-term";
+    div.innerHTML = "<div class='term'>" + rubyTerm(c) + "</div>" +
+      "<div class='meaning' hidden><strong>" + esc(c.meaning) + "</strong>" +
+      (c.note ? "<br><span class='muted'>" + esc(c.note) + "</span>" : "") + "</div>";
+    div.addEventListener("click", () => {
+      const m = div.querySelector(".meaning");
+      m.hidden = !m.hidden;
+    });
+    list.appendChild(div);
+  });
+}
+let wqState = null;
+function startWordQuiz() {
+  const mode = $("wq-mode").value;
+  const pool = (currentTermEntry().cards || []).slice();
+  if (pool.length < 2) {
+    $("wq-message").textContent = "クイズを作るには、このテーマのカードが足りないよ。別のテーマを選んでみてね。";
+    return;
+  }
+  const subj = (window.SSAI_TERMS || []).find((x) => x.subject === $("tc-subject").value);
+  const subjectPool = subj ? subj.topics.flatMap((t) => t.cards) : [];
+  const distractPool = subjectPool.length >= 4 ? subjectPool : pool;
+  const picks = shuffleArr(pool).slice(0, Math.min(5, pool.length));
+  const items = picks.map((card) => {
+    const others = shuffleArr(distractPool.filter((c) => c !== card &&
+      (mode === "meaning2term" ? c.term !== card.term : c.meaning !== card.meaning))).slice(0, 3);
+    const choices = shuffleArr([card].concat(others));
+    return { card: card, choices: choices, correct: choices.indexOf(card) };
+  });
+  wqState = { mode: mode, items: items, idx: 0, score: 0, missed: [], answered: false };
+  $("wq-result").hidden = true;
+  $("wq-panel").hidden = false;
+  $("wq-message").textContent = "";
+  renderWordQuizItem();
+}
+function renderWordQuizItem() {
+  const it = wqState.items[wqState.idx];
+  wqState.answered = false;
+  $("wq-count").textContent = (wqState.idx + 1) + " / " + wqState.items.length + " 問目";
+  $("wq-question").textContent = wqState.mode === "meaning2term" ? it.card.meaning : it.card.term;
+  $("wq-feedback").textContent = "";
+  $("wq-next").hidden = true;
+  const box = $("wq-choices");
+  box.innerHTML = "";
+  it.choices.forEach((c, i) => {
+    const b = document.createElement("button");
+    b.className = "choice";
+    b.textContent = wqState.mode === "meaning2term" ? c.term : c.meaning;
+    b.addEventListener("click", () => answerWordQuiz(i));
+    box.appendChild(b);
+  });
+}
+function answerWordQuiz(i) {
+  if (!wqState || wqState.answered) return;
+  wqState.answered = true;
+  const it = wqState.items[wqState.idx];
+  const ok = i === it.correct;
+  if (ok) wqState.score += 1;
+  else wqState.missed.push(it.card);
+  [...$("wq-choices").children].forEach((b, j) => {
+    b.disabled = true;
+    if (j === it.correct) b.classList.add("correct");
+    else if (j === i) b.classList.add("wrong");
+  });
+  $("wq-feedback").innerHTML = ok ? "<span class='ok'>⭕ 正解だよ</span>"
+    : "<span class='bad'>❌ 残念</span>　正解は「" +
+      esc(wqState.mode === "meaning2term" ? it.card.term : it.card.meaning) + "」だよ。";
+  $("wq-next").hidden = false;
+  $("wq-next").textContent =
+    wqState.idx + 1 >= wqState.items.length ? "結果を見る" : "次の問題";
+}
+function nextWordQuizItem() {
+  if (!wqState) return;
+  wqState.idx += 1;
+  if (wqState.idx >= wqState.items.length) {
+    $("wq-panel").hidden = true;
+    $("wq-result").hidden = false;
+    $("wq-score").textContent = wqState.items.length + "問中 " + wqState.score + "問正解だったよ。";
+    const m = $("wq-missed");
+    m.innerHTML = wqState.missed.length
+      ? "<p class='muted'>間違えた言葉：</p>" + wqState.missed.map((c) =>
+          "<div class='card-term'><div class='term'>" + rubyTerm(c) + "</div>" +
+          "<div class='meaning'>" + esc(c.meaning) + "</div></div>").join("")
+      : "<p class='muted'>全部正解だったよ。</p>";
+    wqState = null;
+    return;
+  }
+  renderWordQuizItem();
+}
+
+/* ---------- 要点まとめ ---------- */
+function fillYotenSelects() {
+  const THEMES = window.SSAI_THEMES;
+  const sSel = $("yt-subject"), tSel = $("yt-topic");
+  if (!sSel.options.length) {
+    THEMES.subjects.forEach((s) => {
+      const o = document.createElement("option");
+      o.value = s; o.textContent = s;
+      sSel.appendChild(o);
+    });
+  }
+  const cur = tSel.value;
+  tSel.innerHTML = "";
+  (THEMES.topics[sSel.value] || []).forEach((tp) => {
+    const o = document.createElement("option");
+    o.value = tp; o.textContent = tp;
+    tSel.appendChild(o);
+  });
+  if (cur && [...tSel.options].some((o) => o.value === cur)) tSel.value = cur;
+  renderYoten();
+}
+function renderYoten() {
+  const THEMES = window.SSAI_THEMES;
+  const file = THEMES.yoten[$("yt-subject").value + "||" + $("yt-topic").value];
+  $("yt-img").src = file ? "yoten/" + file : "";
+}
+
+/* ---------- 記録・統計 ---------- */
+function renderStats() {
+  const total = DB.attempts.length;
+  const correct = DB.attempts.filter((a) => a.row.is_correct).length;
+  const xp = correct * 10 + (total - correct) * 2;
+  const level = Math.floor(xp / 100) + 1;
+  const today = todayJST();
+  const todayCount = DB.attempts.filter((a) =>
+    jstDateStr(new Date((a.row.created_at || 0) * 1000)) === today).length;
+  const days = new Set(DB.attempts.map((a) =>
+    jstDateStr(new Date((a.row.created_at || 0) * 1000))));
+  $("stats-summary").innerHTML =
+    "<p>解いた問題：<span class='big'>" + total + "</span> 問" +
+    "（正解 " + correct + " 問、正解率 " +
+    (total ? Math.round(correct / total * 100) : 0) + "%）</p>" +
+    "<p>今日解いた問題：" + todayCount + " 問</p>" +
+    "<p>レベル <span class='big'>" + level + "</span>（経験値 " + xp + " XP）</p>" +
+    "<p>勉強した日：" + days.size + " 日</p>";
+  const THEMES = window.SSAI_THEMES;
+  const stats = attemptStatsByTopic();
+  let html = "<table class='stats'><tr><th>科目</th><th>テーマ</th><th>解いた数</th><th>正解率</th></tr>";
+  for (const s of THEMES.subjects) {
+    const tps = THEMES.topics[s] || [];
+    const started = tps.filter((tp) => stats.has(s + "||" + tp)).length;
+    let t = 0, c = 0;
+    tps.forEach((tp) => {
+      const st = stats.get(s + "||" + tp);
+      if (st) { t += st.total; c += st.correct; }
+    });
+    html += "<tr><td>" + esc(s) + "</td><td>" + started + " / " + tps.length + "</td>" +
+      "<td>" + t + "問</td><td>" + (t ? Math.round(c / t * 100) + "%" : "―") + "</td></tr>";
+  }
+  $("stats-subjects").innerHTML = html + "</table>";
+  const sumMin = (rows) => rows.reduce((a, r) => a + (r.minutes || 0), 0);
+  const todayMin = sumMin(DB.sessions.filter((r) => r.date === today));
+  $("stats-time").innerHTML =
+    "<p>今日：" + todayMin + " 分</p><p>合計：" + sumMin(DB.sessions) + " 分</p>";
+}
+</script>
+<script>
+"use strict";
+/* ============================================================
+   ログイン・画面遷移・初期化
+   ============================================================ */
+function refreshAll() {
+  if (!DB.loaded) return;
+  renderHome();
+  renderThemes();
+  renderWrong();
+  renderStats();
+}
+async function onSignedIn() {
+  $("who").textContent = currentUser.email || "";
+  $("logout-btn").hidden = false;
+  $("tabbar").hidden = false;
+  $("account-info").textContent = "ログイン中：" + (currentUser.email || "");
+  showView("home");
+  $("today-list").innerHTML = "<p class='muted'>記録を読み込んでいるよ…</p>";
+  try {
+    await loadAll();
+    $("sync-note").textContent = "最終読み込み：" + new Date().toLocaleString("ja-JP");
+    refreshAll();
+  } catch (e) {
+    toast("記録を読み込めませんでした。ネットの接続を確認して、もう一度試してね", true);
+    $("today-list").innerHTML =
+      "<p class='bad'>読み込みに失敗したよ。「設定」画面の「今すぐ読み直す」か、開き直しを試してね。</p>";
+  }
+}
+function onSignedOut() {
+  currentUser = null;
+  DB.loaded = false;
+  DB.docs = new Map();
+  rebuildIndexes();
+  $("who").textContent = "";
+  $("logout-btn").hidden = true;
+  $("tabbar").hidden = true;
+  showView("login");
+}
+auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    currentUser = user;
+    await onSignedIn();
+  } else {
+    onSignedOut();
+  }
+});
+$("login-btn").addEventListener("click", async () => {
+  const email = $("login-email").value.trim();
+  const password = $("login-password").value;
+  $("login-error").textContent = "";
+  if (!email || !password) {
+    $("login-error").textContent = "メールアドレスとパスワードを入れてね。";
+    return;
+  }
+  $("login-btn").disabled = true;
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+  } catch (e) {
+    $("login-error").textContent =
+      AUTH_ERRORS[e.code] || "ログインできませんでした。もう一度試してね。";
+  } finally {
+    $("login-btn").disabled = false;
+  }
+});
+$("logout-btn").addEventListener("click", async () => {
+  try { await auth.signOut(); } catch (e) { toast("ログアウトに失敗したよ"); }
+});
+$("sync-btn").addEventListener("click", async () => {
+  if (!currentUser) return;
+  $("sync-note").textContent = "読み直しているよ…";
+  try {
+    await loadAll();
+    $("sync-note").textContent = "最終読み込み：" + new Date().toLocaleString("ja-JP");
+    refreshAll();
+    toast("読み直したよ");
+  } catch (e) {
+    $("sync-note").textContent = "読み直しに失敗したよ。ネットの接続を確認してね。";
+  }
+});
+
+/* ---------- ナビゲーション ---------- */
+document.querySelectorAll("#tabbar button").forEach((b) => {
+  b.addEventListener("click", () => {
+    const v = b.dataset.view;
+    if (v === "themes") renderThemes();
+    if (v === "wrong") renderWrong();
+    if (v === "terms") renderTermCards();
+    if (v === "yoten") fillYotenSelects();
+    if (v === "stats") renderStats();
+    if (v === "home") renderHome();
+    showView(v);
+  });
+});
+$("theme-subject").addEventListener("change", renderThemes);
+$("quiz-next").addEventListener("click", nextQuizItem);
+$("quiz-submit-text").addEventListener("click", () => answerCurrent(-1, ""));
+$("quiz-quit").addEventListener("click", () => {
+  session = null;
+  renderHome();
+  showView("home");
+});
+$("quiz-back-home").addEventListener("click", () => { renderHome(); showView("home"); });
+$("wrong-redo-btn").addEventListener("click", startRedoSession);
+$("tc-subject").addEventListener("change", () => { fillTermSelects(); renderTermCards(); });
+$("tc-topic").addEventListener("change", renderTermCards);
+$("tc-tab-cards").addEventListener("click", () => {
+  $("tc-tab-cards").classList.add("selected");
+  $("tc-tab-quiz").classList.remove("selected");
+  $("tc-cards-area").hidden = false;
+  $("tc-quiz-area").hidden = true;
+});
+$("tc-tab-quiz").addEventListener("click", () => {
+  $("tc-tab-quiz").classList.add("selected");
+  $("tc-tab-cards").classList.remove("selected");
+  $("tc-cards-area").hidden = true;
+  $("tc-quiz-area").hidden = false;
+});
+$("wq-start").addEventListener("click", startWordQuiz);
+$("wq-next").addEventListener("click", nextWordQuizItem);
+$("yt-subject").addEventListener("change", fillYotenSelects);
+$("yt-topic").addEventListener("change", renderYoten);
+$("yt-img").addEventListener("click", () => {
+  if (!$("yt-img").src) return;
+  $("lightbox-img").src = $("yt-img").src;
+  $("lightbox").classList.add("open");
+});
+$("lightbox").addEventListener("click", () => $("lightbox").classList.remove("open"));
+
+/* ---------- 設定 ---------- */
+document.querySelectorAll("#fontsize-seg button").forEach((b) =>
+  b.addEventListener("click", () => applyFontSize(b.dataset.size)));
+document.querySelectorAll("#rubysize-seg button").forEach((b) =>
+  b.addEventListener("click", () => applyRubySize(b.dataset.rsize)));
+document.querySelectorAll("#ruby-seg button").forEach((b) =>
+  b.addEventListener("click", () => setRubyOn(b.dataset.ruby === "1")));
+applyFontSize(localStorage.getItem("ssai_fontsize") || "normal");
+applyRubySize(localStorage.getItem("ssai_rubysize") || "normal");
+syncRubyUi();
+fillTermSelects();
+fillYotenSelects();
+</script>
+</body>
+</html>
