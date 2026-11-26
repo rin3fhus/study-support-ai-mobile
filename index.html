@@ -70,6 +70,16 @@
   .card-term .term{font-weight:700;font-size:1.05em}
   .card-term .meaning{margin-top:.4em}
   img.yoten{width:100%;height:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
+  /* v1.3（PC版 v0.9.8 項目20・52・53）: 要点カード・比較表・物語導入・例文 */
+  .yoten-card{background:#fffdf5;border:2px solid #e3c95c;border-radius:10px;padding:.7em .9em;margin:.6em 0}
+  .yoten-card .yc-title{font-weight:700;margin-bottom:.3em}
+  .yoten-card ol{margin:0;padding-left:1.4em;line-height:1.75}
+  .guide-story{background:#f4f6fb;border-left:4px solid #7889d5;border-radius:8px;padding:.6em .8em;margin:.6em 0;line-height:1.8}
+  .compare-block{margin:.8em 0}
+  .compare-table{width:100%;border-collapse:collapse}
+  .compare-table th,.compare-table td{border:1px solid var(--line);padding:.4em .6em;text-align:left;vertical-align:top;line-height:1.7}
+  .compare-table th{background:#f4f6fb;white-space:nowrap}
+  .tc-example{margin-top:.35em;color:#445}
   #lightbox{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:50;display:none;
     align-items:center;justify-content:center;padding:.5em}
   #lightbox.open{display:flex}
@@ -103,6 +113,27 @@
   .small-note{font-size:.82em}
   img.guide-illustration{max-width:100%;height:auto;display:block;margin:.6em auto}
   #quiz-tempo{font-weight:700;color:var(--accent)}
+  /* v1.4（PC版 v0.9.9）: パネルの折りたたみ */
+  .panel.foldable{position:relative}
+  .fold-toggle{position:absolute;top:.45em;right:.55em;background:var(--chip);color:var(--ink);
+    border-radius:10px;padding:.35em .7em;font-size:.85em;font-weight:700;min-height:44px}
+  .panel.fold-closed>*:not(.fold-toggle){display:none !important}
+  .panel.fold-closed .fold-toggle{position:static;display:block;width:100%;text-align:left;
+    background:none;border:none;font-size:1.08em;padding:.1em 0}
+  /* v1.4: 問題画面の「その他」メニュー */
+  details.more-menu{margin-top:.5em}
+  details.more-menu summary{display:inline-flex;align-items:center;background:var(--chip);
+    border-radius:10px;padding:.55em .9em;font-weight:700;cursor:pointer;min-height:44px;list-style:none}
+  details.more-menu summary::-webkit-details-marker{display:none}
+  /* v1.4（3A）: 特大＋狭幅でも横スクロールを出さない */
+  html,body{overflow-x:hidden;overflow-x:clip}
+  img,svg,table{max-width:100%}
+  .compare-block{overflow-x:auto}
+  .qtext,.explain,.guide-story{overflow-wrap:break-word}
+  @media(max-width:600px){
+    html[data-fontsize="xlarge"] main{zoom:1.12}
+    html[data-fontsize="large"] main{zoom:1.05}
+  }
 </style>
 </head>
 <body>
@@ -137,11 +168,16 @@
       <div id="today-list"></div>
       <p class="muted" id="today-empty" hidden>今日の分は全部できたよ。お疲れさま。</p>
     </div>
-    <div class="panel">
+    <div class="panel foldable" data-fold-store="ssai_m_home_folds" data-fold-key="m-mimi" data-fold-title="ミミからのおすすめ" data-fold-default="open">
       <h2>ミミからのおすすめ</h2>
       <p id="mimi-rec" class="muted">読み込み中…</p>
     </div>
-    <div class="panel">
+    <div class="panel foldable" id="report-review-panel" data-fold-store="ssai_m_home_folds" data-fold-key="m-review" data-fold-title="🔁 レポートの解き直し予定" data-fold-default="open" hidden>
+      <h2>🔁 レポートの解き直し予定</h2>
+      <p class="muted">理解したレポートを、間をあけて解き直す予定だよ（パソコン版と同期しているよ）。</p>
+      <div id="report-review-list"></div>
+    </div>
+    <div class="panel foldable" data-fold-store="ssai_m_home_folds" data-fold-key="m-more" data-fold-title="もっと使う" data-fold-default="closed">
       <h2>もっと使う</h2>
       <div class="row">
         <button class="secondary grow" id="home-goto-plan">🗓️ 学習プラン</button>
@@ -149,6 +185,20 @@
       </div>
       <div class="row" style="margin-top:.5em">
         <button class="secondary grow" id="home-goto-notes">⭐ ノート・お気に入り</button>
+        <button class="secondary grow" id="home-goto-report-guide">📖 レポート理解ガイド</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- レポート理解ガイド（v1.2: PC版 v0.9.5 のガイドをそのまま表示） -->
+  <section id="view-reportguide" hidden>
+    <div class="panel">
+      <h2>レポート理解ガイド</h2>
+      <p class="muted">学校のレポート1の問題ごとに、「何を聞かれているか」「答えのポイント」「教科書のどこか」をまとめたよ。科目を選んでね。</p>
+      <div id="rg-subjects"></div>
+      <div id="rg-detail"></div>
+      <div class="row" style="margin-top:.8em">
+        <button class="secondary grow" id="rg-back-home">ホームへ戻る</button>
       </div>
     </div>
   </section>
@@ -197,11 +247,17 @@
       <h2 id="guide-title">予習ガイド</h2>
       <p class="muted">まずは予習だよ。問題はまだ始まっていないよ。読み終わったら、下のボタン「予習を見たら、問題を始める」を押してね。</p>
       <p id="guide-intro" style="white-space:pre-wrap"></p>
+      <!-- v1.3（項目53）: 物語風の導入（日本史・世界史のみ） -->
+      <div class="guide-story" id="guide-story" hidden></div>
       <h3>大切な言葉</h3>
       <div id="guide-keywords"></div>
       <div id="guide-diagram"></div>
       <img class="guide-illustration" id="guide-illustration" alt="イラスト" hidden>
       <img class="yoten" id="guide-yoten" alt="要点まとめ画像" hidden>
+      <!-- v1.3（項目20）: 要点カード（テキスト描画方式。画像より優先表示） -->
+      <div class="yoten-card" id="guide-yoten-card" hidden></div>
+      <!-- v1.3（項目52）: 比較表 -->
+      <div id="guide-compare"></div>
       <div id="guide-related" style="margin-top:.8em"></div>
       <div class="row" style="margin-top:.9em">
         <button class="primary grow" id="guide-to-quiz">予習を見たら、問題を始める</button>
@@ -228,14 +284,25 @@
       </div>
       <p id="quiz-feedback"></p>
       <div class="explain" id="quiz-explanation" hidden></div>
+      <!-- v1.3（項目50）: テーマの図解を解説のお供に表示 -->
+      <div id="quiz-diagram"></div>
       <div class="row" style="margin-top:.8em">
         <button class="primary grow" id="quiz-next" hidden>次の問題</button>
         <button class="secondary" id="quiz-quit">やめる</button>
       </div>
       <div class="row" style="margin-top:.5em">
-        <button class="secondary grow" id="quiz-later-btn">🕐 あとで解く</button>
         <button class="secondary grow" id="quiz-fav-btn">⭐ お気に入り</button>
       </div>
+      <!-- v1.4（2A）: 補助的なボタンは「その他」に集約 -->
+      <details class="more-menu" id="quiz-more">
+        <summary>⚙️ その他の操作（あとで解く・出さない）</summary>
+        <div class="row" style="margin-top:.5em">
+          <button class="secondary grow" id="quiz-later-btn">🕐 あとで解く</button>
+        </div>
+        <div class="row" style="margin-top:.5em">
+          <button class="secondary grow" id="quiz-hide-btn">🚫 この問題を出さない（学校と合っていない等）</button>
+        </div>
+      </details>
       <p class="muted" id="quiz-save-note"></p>
     </div>
     <div class="panel" id="quiz-result" hidden>
@@ -278,7 +345,18 @@
           <option value="meaning2term">意味 → 用語</option>
           <option value="term2meaning">用語 → 意味</option>
         </select>
-        <button class="primary" id="wq-start" style="width:100%">言葉クイズを始める（5問）</button>
+        <!-- v1.3（項目19）: 範囲と問題数を選べるようにした -->
+        <label for="wq-scope">範囲</label>
+        <select id="wq-scope">
+          <option value="theme">このテーマ</option>
+          <option value="subject">科目全体</option>
+        </select>
+        <label for="wq-count">問題数</label>
+        <select id="wq-count">
+          <option value="5" selected>5問</option>
+          <option value="10">10問</option>
+        </select>
+        <button class="primary" id="wq-start" style="width:100%">言葉クイズを始める</button>
         <p class="muted" id="wq-message"></p>
         <div id="wq-panel" hidden>
           <p class="muted" id="wq-count"></p>
@@ -323,6 +401,8 @@
       <select id="yt-subject"></select>
       <label for="yt-topic">テーマ</label>
       <select id="yt-topic"></select>
+      <!-- v1.3（項目20）: 要点カード（テキスト描画方式）を優先表示 -->
+      <div class="yoten-card" id="yt-card" hidden></div>
       <p class="muted">画像をタップすると大きく見られるよ。</p>
       <img class="yoten" id="yt-img" alt="要点まとめ画像">
     </div>
@@ -515,13 +595,17 @@
 <script src="data/terms.js"></script>
 <script src="data/guides.js"></script>
 <script src="data/pairs.js"></script>
+<script src="data/report_guides.js"></script>
+<script src="data/yoten_cards.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
 "use strict";
 /* ============================================================
-   学習サポートAI（スマホ版）v1.1
-   - AIなし。シード問題・用語カード・要点画像は同梱の静的データ。
+   学習サポートAI（スマホ版）v1.6（PC版 v0.9.12 対応）
+   v1.6: 模擬試験の結果画面にも「この問題を出さない」ボタンを追加。
+   シード問題 seed-rk-danraku-choice-1 の選択肢をPC版に合わせて更新。
+   - AIなし。シード問題・用語カード・要点カードは同梱の静的データ。
    - 記録は Firebase（study-support-ai-4a4dd）の users/{uid}/data に、
      パソコン版 v0.9.0 の同期形式そのままで読み書きする。
      1ドキュメント＝1行：ドキュメント名 {table}__{sync_key}、
@@ -600,6 +684,39 @@ function daysBetween(aIso, bIso) {
   return Math.round((b - a) / 86400000);
 }
 const nowSec = () => Math.floor(Date.now() / 1000);
+
+/* ---------- v1.4: パネルの折りたたみ（PC版 v0.9.9 と同じ考え方） ---------- */
+function mFoldStoreRead(storeKey) {
+  try { return JSON.parse(localStorage.getItem(storeKey) || "{}") || {}; } catch (e) { return {}; }
+}
+function initFoldPanels() {
+  document.querySelectorAll(".panel.foldable").forEach((panel) => {
+    const key = panel.dataset.foldKey;
+    if (!key || panel.querySelector(".fold-toggle")) return;
+    const storeKey = panel.dataset.foldStore || "ssai_m_folds";
+    const title = panel.dataset.foldTitle || "";
+    const store = mFoldStoreRead(storeKey);
+    let open = key in store ? !!store[key] : panel.dataset.foldDefault !== "closed";
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "fold-toggle";
+    const apply = () => {
+      panel.classList.toggle("fold-closed", !open);
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+      btn.textContent = open ? "▾ 閉じる" : `▸ ${title}`;
+      btn.setAttribute("aria-label", `${title}を${open ? "閉じる" : "開く"}`);
+    };
+    btn.addEventListener("click", () => {
+      open = !open;
+      const st = mFoldStoreRead(storeKey);
+      st[key] = open;
+      try { localStorage.setItem(storeKey, JSON.stringify(st)); } catch (e) {}
+      apply();
+    });
+    panel.insertBefore(btn, panel.firstChild);
+    apply();
+  });
+}
 
 /* ---------- 表示設定（パソコン版 v0.9.2 と同じ考え方・同じ保存キー） ---------- */
 function applyFontSize(size) {
@@ -718,6 +835,9 @@ const DB = {
   later: [],             // later_questions の [{key, row}]
   notes: [],             // user_notes の [{key, row}]
   subjectExamDates: {},  // subject -> exam_date
+  reportList: [],        // reports の [{key, row}]（v1.2: 解き直し予定の対応付け用）
+  reportReviews: [],     // report_reviews の [{key, row}]（v1.2: PC版 v0.9.7 と同期）
+  hiddenQ: new Set(),    // hidden_questions で hidden=1 の qkey（v1.2）
   loaded: false
 };
 const PENDING_KEY = "ssai_mobile_pending_v1";
@@ -735,12 +855,17 @@ function rebuildIndexes() {
   DB.later = [];
   DB.notes = [];
   DB.subjectExamDates = {};
+  DB.reportList = [];
+  DB.reportReviews = [];
+  DB.hiddenQ = new Set();
   for (const [docId, d] of DB.docs) {
     const key = docId.slice(docId.indexOf("__") + 2);
     if (d.table === "attempts") DB.attempts.push({ key: key, row: d.row });
     else if (d.table === "review_schedule") DB.review.set(key, { row: d.row, updated_at: d.updated_at });
     else if (d.table === "user_settings") DB.settings = d.row;
-    else if (d.table === "reports") DB.reports.push(d.row);
+    else if (d.table === "reports") { DB.reports.push(d.row); DB.reportList.push({ key: key, row: d.row }); }
+    else if (d.table === "report_reviews") DB.reportReviews.push({ key: key, row: d.row });
+    else if (d.table === "hidden_questions") { if (Number(d.row.hidden) === 1) DB.hiddenQ.add(d.row.qkey); }
     else if (d.table === "study_sessions") DB.sessions.push(d.row);
     else if (d.table === "user_served_stock") DB.served.add(d.row.stock_id);
     else if (d.table === "exam_sessions") DB.exams.push({ key: key, row: d.row });
@@ -975,7 +1100,7 @@ function newExamId() {
   return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 function buildExamItems(subject, count, weakFocus) {
-  const seeds = window.SSAI_SEEDS || [];
+  const seeds = visibleSeeds();
   const stats = attemptStatsByTopic();
   let pool = subject ? seeds.filter((s) => s.subject === subject) : seeds.slice();
   let picked = [];
@@ -1059,6 +1184,58 @@ async function gradeAndSaveExam(examId, items, answers) {
 function guideFor(subject, topic) {
   return (window.SSAI_GUIDES || []).find((g) => g.subject === subject && g.topic === topic) || null;
 }
+/* ---------- v1.3（項目20・52）: 要点カードと比較表 ---------- */
+function yotenCardFor(subject, topic) {
+  const all = window.SSAI_YOTEN_CARDS || {};
+  return all[subject + "||" + topic] || null;
+}
+function renderYotenCardInto(el, subject, topic) {
+  const card = yotenCardFor(subject, topic);
+  if (!card || !(card.points || []).length) { el.hidden = true; el.innerHTML = ""; return false; }
+  el.innerHTML = "<div class='yc-title'>📌 " + esc(topic) + " の要点</div>" +
+    "<ol>" + card.points.map((p) =>
+      "<li><strong>" + esc(p.word) + "</strong>：" + esc(p.text) + "</li>").join("") + "</ol>";
+  el.hidden = false;
+  return true;
+}
+function compareTablesFor(subject, topic) {
+  // PC版と同じ組み立て：混同ペアのうち2語ともこのテーマの用語カード／
+  // ガイドのキーワードに含まれる組を最大2組返す。
+  const terms = new Set();
+  const subj = (window.SSAI_TERMS || []).find((x) => x.subject === subject);
+  if (subj) {
+    const t = subj.topics.find((x) => x.topic === topic);
+    if (t) (t.cards || []).forEach((c) => { if (c.term) terms.add(c.term); });
+  }
+  const g = guideFor(subject, topic);
+  if (g) (g.keywords || []).forEach((k) => { if (k.word) terms.add(k.word); });
+  if (!terms.size) return [];
+  const out = [];
+  (window.SSAI_PAIRS || []).forEach((p) => {
+    if (out.length >= 2 || p.subject !== subject) return;
+    const pts = p.terms || [];
+    if (pts.length < 2 || !pts.slice(0, 2).every((t) => terms.has(t))) return;
+    if ((p.details || []).length < 2) return;
+    out.push(p);
+  });
+  return out;
+}
+function renderCompareInto(el, subject, topic) {
+  el.innerHTML = "";
+  compareTablesFor(subject, topic).forEach((p) => {
+    const wrap = document.createElement("div");
+    wrap.className = "compare-block";
+    let html = "<h3>🔍 比べて覚える：" + esc((p.terms || []).join(" と ")) + "</h3>" +
+      "<table class='compare-table'><tbody>";
+    (p.details || []).forEach((d) => {
+      html += "<tr><th>" + esc(d.term) + "</th><td>" + esc(d.description) + "</td></tr>";
+    });
+    html += "</tbody></table>";
+    if (p.key_point) html += "<p><strong>見分けるポイント：" + esc(p.key_point) + "</strong></p>";
+    wrap.innerHTML = html;
+    el.appendChild(wrap);
+  });
+}
 function relatedThemes(subject, topic) {
   const list = (window.SSAI_THEMES.topics[subject] || []);
   const idx = list.indexOf(topic);
@@ -1089,6 +1266,10 @@ async function addLater(subject, topic, question) {
 
 /* ---------- 出題セッション（テーマ／復習／間違い直し共通） ---------- */
 let session = null; // {kind, items:[q], idx, score, answered}
+/* v1.2: 「出さない問題」（hidden_questions・PC版と同期）を除いたシード一覧 */
+function visibleSeeds() {
+  return (window.SSAI_SEEDS || []).filter((s) => !DB.hiddenQ.has(s.id));
+}
 function prepareFromSeed(seed) {
   const sh = shuffleChoices(seed.choices || [], seed.correct_index, seed.format);
   return {
@@ -1112,7 +1293,7 @@ function prepareFromSnapshot(subject, topic, format, difficulty, question,
   };
 }
 function startThemeSession(subject, topic) {
-  const pool = (window.SSAI_SEEDS || []).filter((s) => s.subject === subject && s.topic === topic);
+  const pool = visibleSeeds().filter((s) => s.subject === subject && s.topic === topic);
   const unserved = shuffleArr(pool.filter((s) => !DB.served.has(s.id)));
   const served = shuffleArr(pool.filter((s) => DB.served.has(s.id)));
   const items = unserved.concat(served).slice(0, 10).map(prepareFromSeed);
@@ -1179,7 +1360,7 @@ function startFormatDrill() {
   const subject = $("theme-subject").value;
   const topic = $("drill-topic").value;
   const fmt = $("drill-format").value;
-  const pool = shuffleArr((window.SSAI_SEEDS || []).filter((s) =>
+  const pool = shuffleArr(visibleSeeds().filter((s) =>
     s.subject === subject && s.topic === topic && s.format === fmt));
   if (!pool.length) { toast("このテーマには、その形式の問題がないよ"); return; }
   const items = pool.slice(0, 5).map(prepareFromSeed);
@@ -1195,7 +1376,7 @@ function startSubjectMix() {
   for (let i = 0; i < 10; i++) {
     if (!bag.length) bag = shuffleArr(topics);
     const tp = bag.pop();
-    const poolAll = (window.SSAI_SEEDS || []).filter((s) => s.subject === subject && s.topic === tp);
+    const poolAll = visibleSeeds().filter((s) => s.subject === subject && s.topic === tp);
     const poolFmt = poolAll.filter((s) => s.format === fmt);
     const pool = poolFmt.length ? poolFmt : poolAll;
     if (!pool.length) continue;
@@ -1252,6 +1433,7 @@ async function tempoTimeout() {
   const ex = $("quiz-explanation");
   ex.textContent = q.explanation || "";
   ex.hidden = !q.explanation;
+  showAnswerDiagram(q);
   // 時間切れは不正解として記録する（パソコン版と同じ：selected_index -1・空欄）
   const saved = await recordAnswer(q, -1, "", false, q.reviewKey || null);
   if (!saved) {
@@ -1278,6 +1460,7 @@ function renderQuizItem() {
   $("quiz-feedback").textContent = "";
   $("quiz-explanation").hidden = true;
   $("quiz-explanation").textContent = "";
+  const qdReset = $("quiz-diagram"); if (qdReset) qdReset.innerHTML = "";
   $("quiz-next").hidden = true;
   $("quiz-save-note").textContent = "";
   $("quiz-tempo").hidden = session.kind !== "tempo";
@@ -1306,6 +1489,8 @@ function updateQuizSubButtons() {
   const q = session.items[session.idx];
   const fav = findFavorite("question", q.question);
   $("quiz-fav-btn").textContent = fav ? "⭐ お気に入り済み（外す）" : "⭐ お気に入り";
+  const hideBtn = $("quiz-hide-btn");
+  if (hideBtn) hideBtn.hidden = !q.stock_id;
 }
 async function answerCurrent(selectedIndex, selectedText) {
   if (!session || session.answered) return;
@@ -1340,6 +1525,7 @@ async function answerCurrent(selectedIndex, selectedText) {
   const ex = $("quiz-explanation");
   ex.textContent = q.explanation || "";
   ex.hidden = !q.explanation;
+  showAnswerDiagram(q);
   const isTempo = session.kind === "tempo";
   if (isTempo) stopTempoTimerKeepEl();
   $("quiz-next").hidden = isTempo;
@@ -1378,7 +1564,7 @@ function nextQuizItem() {
    画面の描画とナビゲーション
    ============================================================ */
 const VIEWS = ["login", "home", "themes", "guide", "quiz", "wrong", "terms", "yoten", "stats", "settings",
-  "exam", "examrun", "examresult", "plan", "notes"];
+  "exam", "examrun", "examresult", "plan", "notes", "reportguide"];
 function showView(name) {
   VIEWS.forEach((v) => { $("view-" + v).hidden = v !== name; });
   document.querySelectorAll("#tabbar button").forEach((b) =>
@@ -1455,8 +1641,100 @@ function computeRecommendations() {
   }
   return recs.slice(0, 3);
 }
+/* ---------- v1.2: レポート解き直し予定（項目4・PC版と同期） ---------- */
+function renderReportReviews() {
+  const panel = $("report-review-panel");
+  const list = $("report-review-list");
+  if (!panel || !list) return;
+  const today = todayJST();
+  const due = DB.reportReviews.filter((e) =>
+    !Number(e.row.done) && e.row.due_date && e.row.due_date <= today);
+  panel.hidden = !due.length;
+  list.innerHTML = "";
+  due.forEach((e) => {
+    const rep = DB.reportList.find((r) => r.key === e.row.report_key);
+    const name = rep ? (rep.row.name || (rep.row.subject + " レポート" + (rep.row.report_no || ""))) : "レポート";
+    const row = document.createElement("div");
+    row.className = "row";
+    const label = document.createElement("span");
+    label.className = "grow";
+    label.textContent = "📝 " + name + "（" + (e.row.stage >= 2 ? "2回目" : "1回目") + "の解き直し・" + e.row.due_date + "まで）";
+    const btn = document.createElement("button");
+    btn.className = "secondary";
+    btn.textContent = "解き直した";
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      const now = Math.floor(Date.now() / 1000);
+      const newRow = Object.assign({}, e.row, { done: 1, done_at: now, updated_at: now });
+      const ok = await saveRow("report_reviews", e.key, newRow);
+      toast(ok ? "記録したよ。お疲れさま" : "端末に控えたよ。つながったら送るね");
+      renderReportReviews();
+    });
+    row.appendChild(label);
+    row.appendChild(btn);
+    list.appendChild(row);
+  });
+}
+
+/* ---------- v1.2: レポート理解ガイド（項目3） ---------- */
+function renderReportGuideSubjects() {
+  const box = $("rg-subjects");
+  const detail = $("rg-detail");
+  box.innerHTML = "";
+  detail.innerHTML = "";
+  const guides = window.SSAI_REPORT_GUIDES || [];
+  if (!guides.length) { box.innerHTML = "<p class='muted'>ガイドのデータが読み込めなかったよ。</p>"; return; }
+  guides.forEach((g) => {
+    const b = document.createElement("button");
+    b.className = "secondary";
+    b.style.width = "100%";
+    b.style.marginTop = ".4em";
+    b.textContent = g.subject + "：" + (g.title || ("レポート" + g.report_no));
+    b.addEventListener("click", () => renderReportGuideDetail(g));
+    box.appendChild(b);
+  });
+}
+function renderReportGuideDetail(g) {
+  const detail = $("rg-detail");
+  detail.innerHTML = "";
+  const h = document.createElement("h3");
+  h.textContent = g.title || (g.subject + " レポート" + g.report_no);
+  detail.appendChild(h);
+  if (g.intro) {
+    const p = document.createElement("p");
+    p.style.whiteSpace = "pre-wrap";
+    p.textContent = g.intro;
+    detail.appendChild(p);
+  }
+  (g.questions || []).forEach((q) => {
+    const div = document.createElement("div");
+    div.className = "explain";
+    div.style.marginTop = ".6em";
+    const head = document.createElement("strong");
+    head.textContent = q.heading || "";
+    div.appendChild(head);
+    const mk = (label, text) => {
+      if (!text) return;
+      const p = document.createElement("p");
+      p.style.whiteSpace = "pre-wrap";
+      p.innerHTML = "";
+      const b = document.createElement("b");
+      b.textContent = label;
+      p.appendChild(b);
+      p.appendChild(document.createTextNode(text));
+      div.appendChild(p);
+    };
+    mk("何を聞かれているか：", q.ask);
+    mk("答えのポイント：", q.points);
+    mk("教科書のどこか：", q.textbook);
+    detail.appendChild(div);
+  });
+  detail.scrollIntoView({ behavior: "smooth" });
+}
+
 function renderHome() {
   if (!DB.loaded) return;
+  renderReportReviews();
   const due = dueReviewRows().length;
   const wrongs = todayWrongAttempts();
   const recs = computeRecommendations();
@@ -1574,6 +1852,14 @@ function renderThemes() {
 
 /* ---------- 予習ガイド ---------- */
 let guideCtx = null; // {subject, topic}
+/* v1.3（項目50）: 回答後、同じテーマの予習ガイドに図解があれば解説のお供に出す */
+function showAnswerDiagram(q) {
+  const box = $("quiz-diagram");
+  if (!box) return;
+  box.innerHTML = "";
+  const g = guideFor(q.subject, q.topic);
+  if (g && g.diagram) box.appendChild(renderDiagram(g.diagram));
+}
 function renderDiagram(diagram) {
   const wrap = document.createElement("div");
   wrap.className = "diagram";
@@ -1602,6 +1888,15 @@ function openGuide(subject, topic) {
   $("guide-title").textContent = subject + "／" + topic + " の予習";
   $("guide-intro").textContent = g ? (g.intro || "") :
     "このテーマの予習ガイドは、まだ用意できていないよ。問題から始めてね。";
+  // v1.3（項目53）: 物語風の導入（日本史・世界史のみ）
+  const storyEl = $("guide-story");
+  if (g && g.story_intro) {
+    storyEl.innerHTML = "<strong>📜 物語でつかむ</strong><br>" + esc(g.story_intro);
+    storyEl.hidden = false;
+  } else {
+    storyEl.hidden = true;
+    storyEl.innerHTML = "";
+  }
   const kw = $("guide-keywords");
   kw.innerHTML = "";
   if (g && (g.keywords || []).length) {
@@ -1626,14 +1921,18 @@ function openGuide(subject, topic) {
     ill.removeAttribute("src");
   }
   const gy = $("guide-yoten");
+  // v1.3（項目20）: 要点カード（テキスト描画方式）を優先表示。画像はカードが無い場合の予備。
+  const hasCard = renderYotenCardInto($("guide-yoten-card"), subject, topic);
   const yfile = window.SSAI_THEMES.yoten[subject + "||" + topic];
-  if (yfile) {
+  if (!hasCard && yfile) {
     gy.src = "yoten/" + yfile;
     gy.hidden = false;
   } else {
     gy.hidden = true;
     gy.removeAttribute("src");
   }
+  // v1.3（項目52）: 比較表
+  renderCompareInto($("guide-compare"), subject, topic);
   const rel = relatedThemes(subject, topic);
   const relEl = $("guide-related");
   relEl.innerHTML = "";
@@ -1751,7 +2050,9 @@ function renderTermCards() {
     div.className = "card-term";
     div.innerHTML = "<div class='term'>" + rubyTerm(c) + "</div>" +
       "<div class='meaning' hidden><strong>" + esc(c.meaning) + "</strong>" +
-      (c.note ? "<br><span class='muted'>" + esc(c.note) + "</span>" : "") + "</div>";
+      (c.note ? "<br><span class='muted'>" + esc(c.note) + "</span>" : "") +
+      // v1.3（項目46）: 例文
+      (c.example ? "<div class='tc-example'>例：" + esc(c.example) + "</div>" : "") + "</div>";
     const favB = document.createElement("button");
     favB.className = "secondary";
     const ref = $("tc-subject").value + "|" + $("tc-topic").value + "|" + c.term;
@@ -1780,7 +2081,11 @@ function startWordQuiz() {
   const subj = (window.SSAI_TERMS || []).find((x) => x.subject === $("tc-subject").value);
   const subjectPool = subj ? subj.topics.flatMap((t) => t.cards) : [];
   const distractPool = subjectPool.length >= 4 ? subjectPool : pool;
-  const picks = shuffleArr(pool).slice(0, Math.min(5, pool.length));
+  // v1.3（項目19）: 範囲（科目全体）と問題数を選べるようにした
+  const scope = ($("wq-scope") || {}).value || "theme";
+  const count = parseInt(($("wq-count") || {}).value || "5", 10) || 5;
+  const quizPool = (scope === "subject" && subjectPool.length >= 2) ? subjectPool : pool;
+  const picks = shuffleArr(quizPool.slice()).slice(0, Math.min(count, quizPool.length));
   const items = picks.map((card) => {
     const others = shuffleArr(distractPool.filter((c) => c !== card &&
       (mode === "meaning2term" ? c.term !== card.term : c.meaning !== card.meaning))).slice(0, 3);
@@ -1871,8 +2176,18 @@ function fillYotenSelects() {
 }
 function renderYoten() {
   const THEMES = window.SSAI_THEMES;
-  const file = THEMES.yoten[$("yt-subject").value + "||" + $("yt-topic").value];
-  $("yt-img").src = file ? "yoten/" + file : "";
+  const subject = $("yt-subject").value, topic = $("yt-topic").value;
+  // v1.3（項目20）: 要点カードを優先表示し、画像は予備として残す
+  const hasCard = renderYotenCardInto($("yt-card"), subject, topic);
+  const file = THEMES.yoten[subject + "||" + topic];
+  const img = $("yt-img");
+  if (!hasCard && file) {
+    img.src = "yoten/" + file;
+    img.hidden = false;
+  } else {
+    img.hidden = true;
+    img.removeAttribute("src");
+  }
 }
 
 /* ---------- 記録・統計 ---------- */
@@ -2060,6 +2375,23 @@ async function submitExamRun(auto) {
       "<div class='meaning'>あなたの答え：" + esc(yourText) + "<br>正解：" +
       "<strong>" + esc(correctText) + "</strong></div>" +
       (q.explanation ? "<div class='muted'>" + esc(q.explanation) + "</div>" : "");
+    /* v1.6: 模擬試験の結果でも「この問題を出さない」が使えるように（PC版 v0.9.12 と同じ） */
+    if (!r.is_correct && q.stock_id) {
+      const hb = document.createElement("button");
+      hb.className = "secondary";
+      hb.textContent = "🚫 この問題を出さない";
+      hb.addEventListener("click", async () => {
+        if (!confirm("この問題を、今後出さないようにする？（パソコン版の設定から戻せるよ）")) return;
+        const now = Math.floor(Date.now() / 1000);
+        const row = { qkey: q.stock_id, subject: q.subject, topic: q.topic,
+          question: q.question, hidden: 1, created_at: now, updated_at: now };
+        const ok = await saveRow("hidden_questions", randHex(16), row);
+        hb.disabled = true;
+        hb.textContent = "出さないようにしました";
+        toast(ok ? "この問題は出さないようにしたよ" : "端末に控えたよ。つながったら送るね");
+      });
+      div.appendChild(hb);
+    }
     itemsEl.appendChild(div);
   });
   examRun = null;
@@ -2576,6 +2908,21 @@ $("quiz-fav-btn").addEventListener("click", async () => {
   await toggleFavorite("question", q.question, q.subject, q.topic);
   updateQuizSubButtons();
 });
+/* v1.2: この問題を出さない（項目15・PC版と同期。ストック問題だけが対象） */
+$("quiz-hide-btn").addEventListener("click", async () => {
+  if (!session) return;
+  const q = session.items[session.idx];
+  if (!q.stock_id) { toast("この問題は対象外だよ（もとの問題だけ出さない設定にできるよ）"); return; }
+  if (!confirm("この問題を、今後出さないようにする？（パソコン版の設定から戻せるよ）")) return;
+  const now = Math.floor(Date.now() / 1000);
+  const row = { qkey: q.stock_id, subject: q.subject, topic: q.topic,
+    question: q.question, hidden: 1, created_at: now, updated_at: now };
+  const ok = await saveRow("hidden_questions", randHex(16), row);
+  toast(ok ? "この問題は出さないようにしたよ" : "端末に控えたよ。つながったら送るね");
+  nextQuizItem();
+});
+$("home-goto-report-guide").addEventListener("click", () => { renderReportGuideSubjects(); showView("reportguide"); });
+$("rg-back-home").addEventListener("click", () => { renderHome(); showView("home"); });
 $("quiz-back-home").addEventListener("click", () => { renderHome(); showView("home"); });
 $("wrong-redo-btn").addEventListener("click", startRedoSession);
 /* ---------- ドリル・予習ガイド ---------- */
@@ -2656,6 +3003,13 @@ document.querySelectorAll("#rubysize-seg button").forEach((b) =>
   b.addEventListener("click", () => applyRubySize(b.dataset.rsize)));
 document.querySelectorAll("#ruby-seg button").forEach((b) =>
   b.addEventListener("click", () => setRubyOn(b.dataset.ruby === "1")));
+initFoldPanels();
+(function () {
+  const qm = $("quiz-more");
+  if (qm) qm.addEventListener("click", (ev) => {
+    if (ev.target && ev.target.closest && ev.target.closest("button")) qm.open = false;
+  });
+})();
 applyFontSize(localStorage.getItem("ssai_fontsize") || "normal");
 applyRubySize(localStorage.getItem("ssai_rubysize") || "normal");
 syncRubyUi();
