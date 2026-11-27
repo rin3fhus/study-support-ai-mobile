@@ -194,6 +194,23 @@
     <div class="panel foldable" data-fold-store="ssai_m_home_folds" data-fold-key="m-mimi" data-fold-title="ミミからのおすすめ" data-fold-default="open">
       <h2>ミミからのおすすめ</h2>
       <p id="mimi-rec" class="muted">読み込み中…</p>
+      <!-- v2.7（第3弾-2）: ミミが今日のテーマを1つすすめる -->
+      <div id="mimi-one-v27" hidden>
+        <p id="mimi-one-msg-v27"></p>
+        <p id="mimi-one-reason-v27" class="muted"></p>
+        <button class="primary" id="mimi-one-start-v27" style="width:100%">このテーマを始める</button>
+      </div>
+    </div>
+    <!-- v2.7（第4弾-7）: 1日の終わりの1行振り返り（端末ローカル） -->
+    <div class="panel">
+      <h2>🌙 今日の1行振り返り</h2>
+      <p class="muted">1日の終わりに、1行だけ振り返りを書いて残せるよ（この端末に保存されるよ）。</p>
+      <div class="row">
+        <input id="reflection-input-v27" type="text" maxlength="200" placeholder="例：今日は日本史のテーマを1つ終わらせた" style="flex:1">
+        <button class="primary" id="reflection-save-v27">保存</button>
+      </div>
+      <p class="muted" id="reflection-msg-v27"></p>
+      <div id="reflection-list-v27"></div>
     </div>
     <div class="panel foldable" id="report-review-panel" data-fold-store="ssai_m_home_folds" data-fold-key="m-review" data-fold-title="🔁 レポートの解き直し予定" data-fold-default="open" hidden>
       <h2>🔁 レポートの解き直し予定</h2>
@@ -307,6 +324,21 @@
     .hour-fill-v26 { background: #4f7cff; height: 100%; }
     .vague-badge-v26 { background: #f59e0b; color: #fff; border-radius: .4em; padding: 0 .35em; font-size: .78em; }
     .theme-done-v26 { background: #f0fbf2; }
+    /* v2.7: テーマ一覧の色分け・カレンダー */
+    .v27-badge { border-radius: .4em; padding: 0 .35em; font-size: .78em; color: #fff; }
+    .v27-badge.st-untouched { background: #9aa3ad; }
+    .v27-badge.st-doing { background: #e6a817; }
+    .v27-badge.st-done { background: #2e9e4f; }
+    .theme-status-untouched-v27 { background: #f4f5f7; }
+    .theme-status-doing-v27 { background: #fff8e1; }
+    .theme-status-done-v27 { background: #f0fbf2; }
+    .tcal-grid-v27 { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin: .6em 0; }
+    .tcal-head-v27 { text-align: center; font-weight: bold; font-size: .85em; }
+    .tcal-cell-v27 { min-height: 2.6em; border: 1px solid #e3e7ee; border-radius: .35em; padding: .15em; font-size: .72em; }
+    .tcal-cell-v27.empty { border: 0; }
+    .tcal-cell-v27.has-done { background: #f0fbf2; border-color: #2e9e4f; }
+    .tcal-day-v27 { font-weight: bold; display: block; font-size: 1.1em; }
+    .tcal-item-v27 { display: block; color: #20713a; }
   </style>
 
   <!-- 弱点ドリル（v2.6: PC版 v0.9.22 第1弾-1） -->
@@ -329,6 +361,8 @@
       <p class="muted">科目とテーマを選んでね。「予習」で要点を読んでから問題を始めるのがおすすめだよ。1テーマ10問まで出るよ。</p>
       <label for="theme-subject">科目</label>
       <select id="theme-subject"></select>
+      <!-- v2.7（第4弾-6）: テーマ一覧の色分けの凡例 -->
+      <p class="muted">色の意味：<span class="v27-badge st-untouched">手つかず</span> まだ解いていない ／ <span class="v27-badge st-doing">途中</span> 解き始めている ／ <span class="v27-badge st-done">完了</span> 進み具合100%か、終わったにチェック済み</p>
       <div id="theme-list"></div>
     </div>
     <div class="panel">
@@ -565,6 +599,19 @@
       <h2>勉強した時間帯（解いた問題数）</h2>
       <div id="stats-hours-v26"></div>
     </div>
+    <!-- v2.7（第3弾-3）: 終わったテーマの月別カレンダー -->
+    <div class="panel">
+      <h2>🗓️ 終わったテーマのカレンダー</h2>
+      <p class="muted">テーマの進み具合が初めて100%になった日を「終わった日」として印を付けたよ。</p>
+      <div class="row">
+        <button class="secondary" id="tcal-prev-v27">← 前の月</button>
+        <strong id="tcal-title-v27">—</strong>
+        <button class="secondary" id="tcal-next-v27">次の月 →</button>
+      </div>
+      <p class="muted" id="tcal-summary-v27"></p>
+      <div id="tcal-grid-v27" class="tcal-grid-v27"></div>
+      <div id="tcal-list-v27"></div>
+    </div>
   </section>
 
   <!-- 模擬試験：設定と履歴 -->
@@ -596,6 +643,10 @@
     <div class="panel">
       <h2>模擬試験の履歴</h2>
       <div id="exam-history"></div>
+      <!-- v2.7（第3弾-1）: 科目ごとの弱点表示 -->
+      <h3>科目ごとの弱点</h3>
+      <p class="muted">模擬試験で解いた問題の記録から、科目ごとの正答率と弱いテーマをまとめたよ。</p>
+      <div id="exam-weakness-v27"></div>
     </div>
   </section>
 
@@ -716,6 +767,17 @@
       <button id="sync-btn" class="secondary" style="width:100%">今すぐ読み直す（同期）</button>
       <p class="muted" id="sync-note"></p>
     </div>
+    <!-- v2.7（第4弾-5）: 復習間隔の目安（短め／ふつう／長め） -->
+    <div class="panel">
+      <h2>復習の間隔の目安</h2>
+      <p class="muted">問題の復習と暗記チェックの間隔の目安だよ（この端末での設定。パソコン版で設定して同期された場合は、そちらが使われるよ）。日数を直接書いたカスタム間隔がある場合は、そちらが優先されるよ。</p>
+      <div class="seg" id="review-span-seg-v27">
+        <button data-span="short">短め</button>
+        <button data-span="normal">ふつう</button>
+        <button data-span="long">長め</button>
+      </div>
+      <p class="muted" id="review-span-note-v27"></p>
+    </div>
   </section>
 </main>
 
@@ -745,6 +807,15 @@
 <script>
 "use strict";
 /* ============================================================
+   学習サポートAI（スマホ版）v2.7（PC版 v0.9.23 対応）
+   v2.7: PC版 v0.9.23（追加機能 第3弾・第4弾）に対応。模擬試験の履歴に
+   科目ごとの弱点表示、ミミが今日のテーマを1つすすめる表示（ホーム）、
+   終わったテーマの月別カレンダー（記録・統計）、解説への教科書ページ
+   表示（data/themes.js に pages/units を追加。記録で裏付けられる範囲だけ）、
+   復習間隔の目安（短め／ふつう／長め。設定画面で選択・端末ローカル、
+   PC版と同期した review_span があればそちらも使う）、テーマ一覧の色分け
+   （手つかず／途中／完了）、1日の終わりの1行振り返り（ホーム・端末
+   ローカル保存で同期対象外。PC版 daily_reflections と同じ扱い）。
    学習サポートAI（スマホ版）v2.6（PC版 v0.9.22 対応）
    v2.6: PC版 v0.9.22（追加機能 第1弾・第2弾）に対応。ホームに試験までの
    日数と「あと何テーマか」と科目別進み具合の円グラフ、「今日はここまで」
@@ -1147,6 +1218,9 @@ function reviewIntervals() {
           p.every((x) => Number.isInteger(x) && x >= 1 && x <= 60)) return p;
     } catch (e) { /* 壊れていたら標準に戻す */ }
   }
+  // v2.7（第4弾-5）: 復習間隔の目安（短め／長め）。カスタム間隔が無いときに使う
+  const spanIv = spanProblemIntervalsV27();
+  if (spanIv) return spanIv;
   return s.mode === "deep" ? [1, 3, 7] : [1, 2, 5];
 }
 function isCustomIntervals() {
@@ -1659,8 +1733,8 @@ async function tempoTimeout() {
     (correctText ? "　正解は「" + esc(correctText) + "」だよ。" : "") +
     "<br><span class='muted'>少し置いて次の問題へ進むよ。</span>";
   const ex = $("quiz-explanation");
-  ex.textContent = q.explanation || "";
-  ex.hidden = !q.explanation;
+  ex.textContent = (q.explanation || "") + textbookLineV27(q);
+  ex.hidden = !ex.textContent;
   showAnswerDiagram(q);
   // 時間切れは不正解として記録する（パソコン版と同じ：selected_index -1・空欄）
   const saved = await recordAnswer(q, -1, "", false, q.reviewKey || null);
@@ -1755,8 +1829,8 @@ async function answerCurrent(selectedIndex, selectedText) {
       (correctText ? "　正解は「" + esc(correctText) + "」だよ。" : "");
   }
   const ex = $("quiz-explanation");
-  ex.textContent = q.explanation || "";
-  ex.hidden = !q.explanation;
+  ex.textContent = (q.explanation || "") + textbookLineV27(q);
+  ex.hidden = !ex.textContent;
   showAnswerDiagram(q);
   const isTempo = session.kind === "tempo";
   if (isTempo) stopTempoTimerKeepEl();
@@ -1806,6 +1880,9 @@ function showView(name) {
   document.querySelectorAll("#tabbar button").forEach((b) =>
     b.classList.toggle("active", b.dataset.view === name));
   window.scrollTo(0, 0);
+  // v2.7: カレンダーと間隔設定の表示を最新化する
+  if (name === "stats") renderThemeCalendarV27();
+  if (name === "settings") renderReviewSpanSegV27();
 }
 function attemptStatsByTopic() {
   const m = new Map();
@@ -2049,6 +2126,9 @@ function renderHome() {
   $("mimi-rec").textContent = recs.length
     ? "今日は「" + recs[0].subject + "｜" + recs[0].topic + "」がおすすめだよ。" + recs[0].reason + "。"
     : (attemptedToday ? "今日も勉強できたね。この調子でいこう。" : "まずは1テーマ、始めてみよう。");
+  // v2.7: ミミの1テーマおすすめ（第3弾-2）・1行振り返り（第4弾-7）
+  renderMimiOneV27();
+  renderReflectionV27();
 }
 
 /* ---------- テーマ選択 ---------- */
@@ -2084,11 +2164,18 @@ function renderThemes() {
     const prog = topicProgress(subject, tp);
     const manualDone = themeCheckLoadV26()[subject + "|" + tp] === true;
     const isDone = manualDone || prog >= 100;
+    // v2.7（第4弾-6）: 状態の色分け（手つかず／途中／完了）
+    const stateClsV27 = isDone ? " theme-status-done-v27" : (!st || !st.total) ? " theme-status-untouched-v27" : " theme-status-doing-v27";
+    const stateBadgeV27 = isDone ? "<span class='v27-badge st-done'>完了</span>"
+      : (!st || !st.total) ? "<span class='v27-badge st-untouched'>手つかず</span>"
+      : "<span class='v27-badge st-doing'>途中</span>";
+    const pageV27 = (window.SSAI_THEMES.pages || {})[subject + "||" + tp];
     const div = document.createElement("div");
-    div.className = "item" + (isDone ? " theme-done-v26" : "");
-    div.innerHTML = "<div class='body'><strong>" + (isDone ? "✓ " : "") + esc(tp) + "</strong>" +
+    div.className = "item" + (isDone ? " theme-done-v26" : "") + stateClsV27;
+    div.innerHTML = "<div class='body'><strong>" + (isDone ? "✓ " : "") + esc(tp) + "</strong> " + stateBadgeV27 +
       (isDone ? " <span class='vague-badge-v26' style='background:#2e9e4f'>✓ 終わった</span>" : "") + "<br>" +
       "<span class='muted'>" + (st ? st.total + "問解いて " + st.correct + "問正解・進み具合 " + prog + "%" : "まだ解いていないテーマ") +
+      (pageV27 ? "・教科書" + esc(pageV27) : "") +
       "</span></div>";
     const favB = document.createElement("button");
     favB.className = "secondary";
@@ -2574,6 +2661,7 @@ let examRun = null; // {id, subject, minutes, items, answers, current, endsAt, t
 function renderExamHistory() {
   const el = $("exam-history");
   el.innerHTML = "";
+  renderExamWeaknessV27();
   if (!DB.exams.length) {
     el.innerHTML = "<p class='muted'>まだ模擬試験の記録はないよ。</p>";
     return;
@@ -3855,7 +3943,7 @@ function mcEnsureV20() {
   mcCompletedSetsV20().forEach((c) => {
     const key = c.subject + "__" + c.report_no;
     if (!m[key]) {
-      m[key] = { stage: 0, due: addDaysStrV20(jstDateStr(new Date(c.completed_at * 1000)), MC_INTERVALS_V20[0]) };
+      m[key] = { stage: 0, due: addDaysStrV20(jstDateStr(new Date(c.completed_at * 1000)), mcIntervalsV27()[0]) };
       changed = true;
     }
   });
@@ -3994,7 +4082,8 @@ function finishMemoryCheckPhoneV20() {
   const body = $("mc-body");
   const m = mcLoadV20();
   const nextStage = st.stage + 1;
-  const interval = MC_INTERVALS_V20[Math.min(nextStage, MC_INTERVALS_V20.length - 1)];
+  const _mcIv = mcIntervalsV27();
+  const interval = _mcIv[Math.min(nextStage, _mcIv.length - 1)];
   const nextDue = addDaysStrV20(todayJST(), interval);
   m[st.key] = { stage: nextStage, due: nextDue };
   mcSaveV20(m);
@@ -4267,6 +4356,246 @@ $("wd-back-home").addEventListener("click", () => { renderHome(); showView("home
 $("wd-start-v26").addEventListener("click", startWeakDrillV26);
 const _vagueOnlyEl = $("tc-vague-only-v26");
 if (_vagueOnlyEl) _vagueOnlyEl.addEventListener("change", () => renderTermCards());
+
+/* ================= v2.7（PC版 v0.9.23）: 第3弾・第4弾 =================
+   第3弾-1 模擬試験の科目別弱点（renderExamWeaknessV27）
+   第3弾-2 ミミが今日のテーマを1つすすめる（renderMimiOneV27）
+   第3弾-3 終わったテーマの月別カレンダー（renderThemeCalendarV27）
+   第4弾-4 解説に教科書のページ表示（textbookLineV27。data/themes.js の
+           pages/units＝目次記録で裏付けられた範囲だけ）
+   第4弾-5 復習間隔の目安（reviewSpanV27 ほか）
+   第4弾-6 テーマ一覧の色分け（renderThemes 側）
+   第4弾-7 1日の終わりの1行振り返り（端末ローカル保存・同期対象外） */
+
+// ----- 第4弾-5: 復習間隔の目安 -----
+const SPAN_KEY_V27 = "ssai_review_span_v27";
+const SPAN_PROBLEM_V27 = { short: [1, 2, 4], long: [2, 6, 14] };
+const SPAN_MEMORY_V27 = { short: [2, 7, 21], normal: [3, 14, 30], long: [5, 21, 45] };
+function reviewSpanV27() {
+  const s = DB.settings || {};
+  if (s.review_span && SPAN_MEMORY_V27[s.review_span]) return s.review_span;
+  try {
+    const v = localStorage.getItem(SPAN_KEY_V27);
+    if (v && SPAN_MEMORY_V27[v]) return v;
+  } catch (e) {}
+  return "";
+}
+function spanProblemIntervalsV27() {
+  return SPAN_PROBLEM_V27[reviewSpanV27()] || null;
+}
+function mcIntervalsV27() {
+  return SPAN_MEMORY_V27[reviewSpanV27()] || MC_INTERVALS_V20;
+}
+function renderReviewSpanSegV27() {
+  const seg = $("review-span-seg-v27");
+  if (!seg) return;
+  const cur = reviewSpanV27() || "normal";
+  seg.querySelectorAll("button").forEach((b) => {
+    b.classList.toggle("active", b.dataset.span === cur);
+    b.onclick = () => {
+      try { localStorage.setItem(SPAN_KEY_V27, b.dataset.span); } catch (e) {}
+      renderReviewSpanSegV27();
+    };
+  });
+  const note = $("review-span-note-v27");
+  if (note) {
+    const pi = spanProblemIntervalsV27();
+    note.textContent = "今の目安：" + ({ short: "短め", normal: "ふつう", long: "長め" }[cur]) +
+      "（問題の復習 " + (pi ? pi.join("・") : "モードに合わせる") +
+      "日／暗記チェック " + mcIntervalsV27().join("・") + "日）";
+  }
+}
+
+// ----- 第4弾-4: 教科書のページ表示 -----
+function textbookLineV27(q) {
+  if (!q || !q.subject || !q.topic) return "";
+  const T = window.SSAI_THEMES || {};
+  const unit = (T.units || {})[q.subject + "||" + q.topic] || "";
+  const page = (T.pages || {})[q.subject + "||" + q.topic] || "";
+  if (!unit && !page) return "";
+  let line = "\n教科書のどこか：";
+  if (unit) line += unit + "の単元";
+  if (page) line += (unit ? "（" : "") + page + (unit ? "）" : "のあたり");
+  return line + "だよ。";
+}
+
+// ----- 第3弾-2: ミミが今日のテーマを1つすすめる -----
+function renderMimiOneV27() {
+  const box = $("mimi-one-v27");
+  if (!box) return;
+  const T = window.SSAI_THEMES || {};
+  const stats = attemptStatsByTopic();
+  const started = [], untouched = [];
+  (T.subjects || []).forEach((s) => {
+    (T.topics[s] || []).forEach((tp) => {
+      const st = stats.get(s + "||" + tp);
+      const prog = topicProgress(s, tp);
+      if (st && st.total > 0 && prog < 100) started.push({ s, tp, prog, acc: st.correct / st.total });
+      else if (!st || !st.total) untouched.push({ s, tp });
+    });
+  });
+  let pick = null, msg = "", reason = "";
+  if (started.length) {
+    started.sort((a, b) => (a.acc - b.acc) || (b.prog - a.prog));
+    pick = started[0];
+    const accPct = Math.round(pick.acc * 100);
+    msg = "今日は「" + pick.tp + "」を少しだけやってみない？ 正答率はまだ " + accPct + "% だから、ここを立て直すとぐっと楽になるよ。少しずつで大丈夫だよ。";
+    reason = "進み具合 " + pick.prog + "%・正答率 " + accPct + "% で、まだ伸ばせるテーマだよ";
+  } else if (untouched.length) {
+    pick = untouched[0];
+    msg = "今日のテーマは「" + pick.tp + "」にしない？ " + pick.s + " の中で、教科書の順番で次に進むところだよ。予習ガイドから眺めるだけでも大丈夫だよ。";
+    reason = pick.s + " はまだ始めたばかり。教科書の順番で次に来るテーマだよ";
+  } else {
+    box.hidden = true;
+    return;
+  }
+  box.hidden = false;
+  $("mimi-one-msg-v27").textContent = msg;
+  $("mimi-one-reason-v27").textContent = "（" + reason + "）";
+  const btn = $("mimi-one-start-v27");
+  btn.textContent = "「" + pick.tp + "」を始める";
+  btn.onclick = () => {
+    showView("themes");
+    const sel = $("theme-subject");
+    if (sel) { sel.value = pick.s; renderThemes(); }
+    startThemeSession(pick.s, pick.tp);
+  };
+}
+
+// ----- 第4弾-7: 1日の終わりの1行振り返り（端末ローカル） -----
+const REFLECTION_KEY_V27 = "ssai_reflections_v27";
+function reflectionLoadV27() {
+  try { return JSON.parse(localStorage.getItem(REFLECTION_KEY_V27) || "{}") || {}; }
+  catch (e) { return {}; }
+}
+function renderReflectionV27() {
+  const list = $("reflection-list-v27");
+  if (!list) return;
+  const all = reflectionLoadV27();
+  const today = todayJST();
+  const input = $("reflection-input-v27");
+  if (input && document.activeElement !== input) input.value = all[today] || "";
+  const dates = Object.keys(all).filter((d) => d !== today).sort().reverse().slice(0, 7);
+  list.innerHTML = dates.length
+    ? "<h3>これまでの振り返り</h3>" + dates.map((d) =>
+        "<p><span class='muted'>" + esc(d) + "</span> " + esc(all[d]) + "</p>").join("")
+    : "";
+}
+$("reflection-save-v27").addEventListener("click", () => {
+  const all = reflectionLoadV27();
+  const today = todayJST();
+  const text = ($("reflection-input-v27").value || "").trim();
+  if (text) all[today] = text; else delete all[today];
+  try { localStorage.setItem(REFLECTION_KEY_V27, JSON.stringify(all)); } catch (e) {}
+  $("reflection-msg-v27").textContent = text ? "保存したよ。今日もお疲れさま。" : "今日の分を消したよ。";
+  renderReflectionV27();
+});
+
+// ----- 第3弾-1: 模擬試験の科目別弱点 -----
+function renderExamWeaknessV27() {
+  const el = $("exam-weakness-v27");
+  if (!el) return;
+  const examIds = new Set((DB.exams || []).map((e) => e.row.id));
+  const bySubject = new Map();
+  for (const a of DB.attempts) {
+    const r = a.row;
+    if (!r.exam_session_id || !examIds.has(r.exam_session_id)) continue;
+    const e = bySubject.get(r.subject) || { total: 0, correct: 0, topics: new Map() };
+    e.total += 1;
+    if (r.is_correct) e.correct += 1;
+    const t = e.topics.get(r.topic) || { total: 0, correct: 0 };
+    t.total += 1;
+    if (r.is_correct) t.correct += 1;
+    e.topics.set(r.topic, t);
+    bySubject.set(r.subject, e);
+  }
+  if (!bySubject.size) {
+    el.innerHTML = "<p class='muted'>まだ模擬試験の記録が無いので、弱点は出せないよ。1回受けると、ここに出るよ。</p>";
+    return;
+  }
+  const rows = [...bySubject.entries()].map(([s, e]) => {
+    const acc = e.total ? e.correct / e.total : 0;
+    let weakTopic = null, weakAcc = 2;
+    e.topics.forEach((t, tp) => {
+      if (t.total >= 2) {
+        const a = t.correct / t.total;
+        if (a < weakAcc) { weakAcc = a; weakTopic = tp; }
+      }
+    });
+    return { s, total: e.total, acc, weakTopic, weakAcc };
+  }).sort((a, b) => a.acc - b.acc);
+  el.innerHTML = rows.map((r) =>
+    "<div class='item'><div class='body'><strong>" + esc(r.s) + "</strong>（正答率 " +
+    Math.round(r.acc * 100) + "%・" + r.total + "問）" +
+    (r.weakTopic ? "<br><span class='muted'>弱いテーマ：" + esc(r.weakTopic) +
+      "（正答率 " + Math.round(r.weakAcc * 100) + "%）</span>" : "") +
+    "</div></div>").join("");
+}
+
+// ----- 第3弾-3: 終わったテーマの月別カレンダー -----
+let tcalMonthV27 = "";
+function themeCompletionDatesV27() {
+  const rows = (DB.attempts || []).map((a) => a.row)
+    .filter((r) => r.created_at)
+    .sort((a, b) => (a.created_at - b.created_at) || 0);
+  const state = new Map(), done = new Map();
+  for (const r of rows) {
+    const k = r.subject + "||" + r.topic;
+    if (done.has(k)) continue;
+    const st = state.get(k) || { total: 0, correct: 0 };
+    st.total += 1;
+    if (r.is_correct) st.correct += 1;
+    state.set(k, st);
+    const prog = Math.min(100, Math.round(st.total / 10 * 100 * (0.5 + 0.5 * (st.correct / st.total))));
+    if (prog >= 100) done.set(k, jstDateStr(new Date(r.created_at * 1000)));
+  }
+  return done;
+}
+function renderThemeCalendarV27() {
+  const grid = $("tcal-grid-v27");
+  if (!grid) return;
+  if (!tcalMonthV27) tcalMonthV27 = todayJST().slice(0, 7);
+  const done = themeCompletionDatesV27();
+  const [y, m] = tcalMonthV27.split("-").map((x) => parseInt(x, 10));
+  $("tcal-title-v27").textContent = y + "年" + m + "月";
+  const days = {};
+  let monthCount = 0;
+  done.forEach((d, k) => {
+    if (d.startsWith(tcalMonthV27)) {
+      (days[d] = days[d] || []).push(k.split("||")[1]);
+      monthCount += 1;
+    }
+  });
+  $("tcal-summary-v27").textContent = "この月に終わったテーマ：" + monthCount +
+    "件／今までに終わったテーマ：" + done.size + "件";
+  const first = new Date(y, m - 1, 1).getDay();
+  const daysInMonth = new Date(y, m, 0).getDate();
+  let html = ["日", "月", "火", "水", "木", "金", "土"].map((w) => "<div class='tcal-head-v27'>" + w + "</div>").join("");
+  for (let i = 0; i < first; i++) html += "<div class='tcal-cell-v27 empty'></div>";
+  for (let day = 1; day <= daysInMonth; day++) {
+    const ds = y + "-" + String(m).padStart(2, "0") + "-" + String(day).padStart(2, "0");
+    const items = days[ds] || [];
+    html += "<div class='tcal-cell-v27" + (items.length ? " has-done" : "") + "'><span class='tcal-day-v27'>" +
+      day + "</span>" + items.map((tp) => "<span class='tcal-item-v27'>✓ " + esc(tp) + "</span>").join("") + "</div>";
+  }
+  grid.innerHTML = html;
+  const list = $("tcal-list-v27");
+  const all = [...done.entries()].map(([k, d]) => ({ d, label: k.replace("||", "／") }))
+    .sort((a, b) => (a.d < b.d ? 1 : -1));
+  list.innerHTML = all.length
+    ? "<h3>終わったテーマの一覧（新しい順）</h3>" + all.map((c) =>
+        "<p><span class='muted'>" + esc(c.d) + "</span> " + esc(c.label) + "</p>").join("")
+    : "<p class='muted'>まだ終わったテーマはありません。進み具合が100%になると、ここに出るよ。</p>";
+}
+function shiftTcalV27(delta) {
+  if (!tcalMonthV27) tcalMonthV27 = todayJST().slice(0, 7);
+  const [y, m] = tcalMonthV27.split("-").map((x) => parseInt(x, 10));
+  const d = new Date(y, m - 1 + delta, 1);
+  tcalMonthV27 = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+  renderThemeCalendarV27();
+}
+$("tcal-prev-v27").addEventListener("click", () => shiftTcalV27(-1));
+$("tcal-next-v27").addEventListener("click", () => shiftTcalV27(1));
 </script>
 
 </body>
