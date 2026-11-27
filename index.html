@@ -72,6 +72,7 @@
   img.yoten{width:100%;height:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
   /* v1.3（PC版 v0.9.8 項目20・52・53）: 要点カード・比較表・物語導入・例文 */
   .yoten-card{background:#fffdf5;border:2px solid #e3c95c;border-radius:10px;padding:.7em .9em;margin:.6em 0}
+  .yoten-card .yc-illustration{width:100%;height:auto;display:block;border-radius:8px;margin-bottom:.5em}
   .yoten-card .yc-title{font-weight:700;margin-bottom:.3em}
   .yoten-card ol{margin:0;padding-left:1.4em;line-height:1.75}
   .guide-story{background:#f4f6fb;border-left:4px solid #7889d5;border-radius:8px;padding:.6em .8em;margin:.6em 0;line-height:1.8}
@@ -171,6 +172,19 @@
         <button class="secondary grow" id="home-goto-rg2">📖 理解ガイド</button>
       </div>
     </div>
+    <!-- v2.6（第1弾-3・第1弾-2）: 試験までの日数と科目別円グラフ -->
+    <div class="panel">
+      <h2>🏁 試験まで</h2>
+      <p id="home-countdown-v26"></p>
+      <h3>科目ごとの進み具合（レポート理解）</h3>
+      <div id="home-donuts-v26" class="donut-row-v26"></div>
+    </div>
+    <!-- v2.6（第1弾-4）: 今日はここまで宣言（端末ローカル） -->
+    <div class="panel">
+      <h2>🏁 今日はここまで宣言</h2>
+      <p class="muted">今日の勉強の区切りを、自分で宣言して記録するカードだよ（この端末に保存されるよ）。</p>
+      <div id="home-finish-v26"></div>
+    </div>
     <div class="panel">
       <h2>今日やる学習</h2>
       <p class="muted" id="today-progress"></p>
@@ -196,6 +210,17 @@
         <button class="secondary grow" id="home-goto-notes">⭐ ノート・お気に入り</button>
         <button class="secondary grow" id="home-goto-report-guide">📖 レポート理解ガイド</button>
       </div>
+      <div class="row" style="margin-top:.5em">
+        <button class="secondary grow" id="home-goto-studyplan">🗓️ 学習計画</button>
+        <button class="secondary grow" id="home-goto-subjectreview">📚 科目総復習</button>
+      </div>
+      <div class="row" style="margin-top:.5em">
+        <button class="secondary grow" id="home-goto-memorycheck">🧠 暗記チェック</button>
+      </div>
+      <div class="row" style="margin-top:.5em">
+        <button class="secondary grow" id="home-goto-weakdrill">🎯 弱点ドリル</button>
+      </div>
+      <p class="muted" id="home-memory-due"></p>
     </div>
   </section>
 
@@ -222,6 +247,77 @@
       <p class="message" id="rq-message"></p>
       <div class="row" style="margin-top:.8em">
         <button class="secondary grow" id="rq-back-home">🏠 ホームへ</button>
+      </div>
+    </div>
+  </section>
+
+
+  <style>
+    .v20-table { border-collapse: collapse; width: 100%; margin: .5em 0 1em; }
+    .v20-table th, .v20-table td { border: 1px solid #ccc; padding: .35em .5em; text-align: left; vertical-align: top; font-size: .92em; }
+    .v20-table th { background: #f3f4f6; white-space: nowrap; }
+    .v20-table tr.v20-today th, .v20-table tr.v20-today td { background: #fef9c3; }
+  </style>
+
+  <!-- 学習計画（v2.0: PC版 v0.9.16） -->
+  <section id="view-studyplan" hidden>
+    <div class="panel">
+      <h2>🗓️ 学習計画</h2>
+      <div id="studyplan-body"><p class="muted">読み込み中…</p></div>
+      <div class="row" style="margin-top:.8em">
+        <button class="secondary grow" id="studyplan-back-home">🏠 ホームへ</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 科目総復習（v2.0: PC版 v0.9.16） -->
+  <section id="view-subjectreview" hidden>
+    <div class="panel">
+      <h2>📚 科目総復習</h2>
+      <p class="muted">科目を選ぶと、その科目のレポートの進み具合・要点カード・用語カード・間違えた問題を一続きで復習できるよ。</p>
+      <div id="sr-subjects"></div>
+      <div id="sr-body"></div>
+      <div class="row" style="margin-top:.8em">
+        <button class="secondary grow" id="sr-back-home">🏠 ホームへ</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 暗記チェック（v2.0: PC版 v0.9.16・スマホ版ローカル） -->
+  <section id="view-memorycheck" hidden>
+    <div class="panel">
+      <h2>🧠 暗記チェック</h2>
+      <div id="mc-list"></div>
+      <div id="mc-body"></div>
+      <p class="message" id="mc-message"></p>
+      <div class="row" style="margin-top:.8em">
+        <button class="secondary grow" id="mc-back-home">🏠 ホームへ</button>
+      </div>
+    </div>
+  </section>
+
+  <style>
+    .donut-row-v26 { display: flex; flex-wrap: wrap; gap: .7em .9em; }
+    .donut-item-v26 { text-align: center; width: 84px; }
+    .donut-subject-v26 { font-weight: 700; font-size: .92em; }
+    .donut-sub-v26 { font-size: .78em; }
+    .hour-row-v26 { display: flex; align-items: center; gap: .5em; margin: .15em 0; }
+    .hour-label-v26 { width: 3em; text-align: right; font-size: .9em; }
+    .hour-track-v26 { flex: 1; background: #e5e7eb; border-radius: .4em; height: .9em; overflow: hidden; }
+    .hour-fill-v26 { background: #4f7cff; height: 100%; }
+    .vague-badge-v26 { background: #f59e0b; color: #fff; border-radius: .4em; padding: 0 .35em; font-size: .78em; }
+    .theme-done-v26 { background: #f0fbf2; }
+  </style>
+
+  <!-- 弱点ドリル（v2.6: PC版 v0.9.22 第1弾-1） -->
+  <section id="view-weakdrill" hidden>
+    <div class="panel">
+      <h2>🎯 弱点ドリル</h2>
+      <p class="muted">間違えたままになっている問題と、正答率が低いテーマの問題を、自動で集めて出すドリルだよ。1セット10問まで。</p>
+      <div id="wd-info-v26"></div>
+      <button class="primary" id="wd-start-v26" style="width:100%">弱点ドリルを始める</button>
+      <div class="row" style="margin-top:.8em">
+        <button class="secondary grow" id="wd-back-home">🏠 ホームへ</button>
       </div>
     </div>
   </section>
@@ -376,6 +472,8 @@
       </div>
       <div id="tc-cards-area">
         <p class="muted">カードをタップすると、意味が見られるよ。</p>
+        <!-- v2.6（第2弾-7）: 「あいまい」だけの絞り込み（端末ローカル） -->
+        <label style="display:block;margin:.4em 0"><input type="checkbox" id="tc-vague-only-v26"> 🤔 あいまいだけ見る</label>
         <div id="tc-list"></div>
       </div>
       <div id="tc-quiz-area" hidden>
@@ -461,6 +559,11 @@
       <h2>学習時間</h2>
       <div id="stats-time"></div>
       <p class="muted">学習時間は、パソコン版の集中タイマーで記録したものだよ。</p>
+    </div>
+    <!-- v2.6（第2弾-6）: 勉強した時間帯のグラフ -->
+    <div class="panel">
+      <h2>勉強した時間帯（解いた問題数）</h2>
+      <div id="stats-hours-v26"></div>
     </div>
   </section>
 
@@ -642,7 +745,31 @@
 <script>
 "use strict";
 /* ============================================================
-   学習サポートAI（スマホ版）v1.8（PC版 v0.9.14 対応）
+   学習サポートAI（スマホ版）v2.6（PC版 v0.9.22 対応）
+   v2.6: PC版 v0.9.22（追加機能 第1弾・第2弾）に対応。ホームに試験までの
+   日数と「あと何テーマか」と科目別進み具合の円グラフ、「今日はここまで」
+   宣言カードを追加。弱点ドリル（間違えた問題＋正答率が低いテーマを自動で
+   集める）を追加。テーマごとの確認テスト（3問）、記録・統計に勉強した
+   時間帯のグラフ、用語カードの「あいまい」マーク（端末ローカル・優先表示と
+   絞り込み）、テーマ一覧の目次チェック表示（進み具合100%で自動✓＋手動
+   チェックは端末ローカル）を追加。宣言・あいまい・手動チェックは端末
+   ローカル保存で、Firebase 同期の対象外（PC版の暗記チェック予定と同じ扱い）。
+   v2.5: PC版 v0.9.21 の同期追加に対応。「理解した」マーク（レポート行の
+   _understood）が学習計画・科目総復習の進み具合に反映されるようにし、
+   チャット連携で追加した用語カード（user_term_cards）と混同ペア
+   （user_confused_pairs）を受け取って、用語カード・混同ペアの画面に
+   合流して表示するようにした。暗記チェックの予定（report_memory_checks）は
+   スマホ版が端末ローカルで予定を持つ現行仕様と競合するため、同期対象外のまま。
+   v2.4: 問題パック第3弾（問題数が少なかった範囲への作り置き問題151問）を
+   追加。シードは全1,989問。第1弾で除外されていた2問も修正して収録。
+   v2.3: PC版の「問題のストック生成」で生成した問題（source='gen'）を、
+   データ再生成（extract_data.py）のときに合流できるようにした。生成分には
+   出題画面で「生成した問題」の印が出る。生成そのものはPC版の機能。
+   v2.2: 問題パック第2弾（送付済みレポートに即した練習問題330問）を追加。シードは全1,838問。
+   v2.1: 日本史レポート4の理解ガイドと解ける問題、レポート4範囲の練習問題17問を追加。
+   v2.0: 学習計画画面・科目総復習・暗記チェック（スマホ版ローカル）を追加。
+   v1.9: 要点カードの先頭にテーマごとのイラスト（絵）を追加（全77テーマ）。
+   図解（データ描画）は補助として残す。
    v1.8: 文学国語の文学史・知識寄り5テーマを削除（テーマ77・シード1,491問）。
    要点カードのポイントに小さな図解（年表・関係図・仕組みの図）を追加（92件）。
    v1.6: 模擬試験の結果画面にも「この問題を出さない」ボタンを追加。
@@ -880,6 +1007,8 @@ const DB = {
   reportList: [],        // reports の [{key, row}]（v1.2: 解き直し予定の対応付け用）
   reportReviews: [],     // report_reviews の [{key, row}]（v1.2: PC版 v0.9.7 と同期）
   hiddenQ: new Set(),    // hidden_questions で hidden=1 の qkey（v1.2）
+  userTerms: [],         // user_term_cards の [{key, row}]（v2.5: チャット連携で追加した用語カード）
+  userPairs: [],         // user_confused_pairs の [{key, row}]（v2.5: チャット連携で追加した混同ペア）
   loaded: false
 };
 const PENDING_KEY = "ssai_mobile_pending_v1";
@@ -900,6 +1029,8 @@ function rebuildIndexes() {
   DB.reportList = [];
   DB.reportReviews = [];
   DB.hiddenQ = new Set();
+  DB.userTerms = [];
+  DB.userPairs = [];
   for (const [docId, d] of DB.docs) {
     const key = docId.slice(docId.indexOf("__") + 2);
     if (d.table === "attempts") DB.attempts.push({ key: key, row: d.row });
@@ -908,6 +1039,8 @@ function rebuildIndexes() {
     else if (d.table === "reports") { DB.reports.push(d.row); DB.reportList.push({ key: key, row: d.row }); }
     else if (d.table === "report_reviews") DB.reportReviews.push({ key: key, row: d.row });
     else if (d.table === "hidden_questions") { if (Number(d.row.hidden) === 1) DB.hiddenQ.add(d.row.qkey); }
+    else if (d.table === "user_term_cards") DB.userTerms.push({ key: key, row: d.row });
+    else if (d.table === "user_confused_pairs") DB.userPairs.push({ key: key, row: d.row });
     else if (d.table === "study_sessions") DB.sessions.push(d.row);
     else if (d.table === "user_served_stock") DB.served.add(d.row.stock_id);
     else if (d.table === "exam_sessions") DB.exams.push({ key: key, row: d.row });
@@ -1234,7 +1367,10 @@ function yotenCardFor(subject, topic) {
 function renderYotenCardInto(el, subject, topic) {
   const card = yotenCardFor(subject, topic);
   if (!card || !(card.points || []).length) { el.hidden = true; el.innerHTML = ""; return false; }
-  el.innerHTML = "<div class='yc-title'>📌 " + esc(topic) + " の要点</div>" +
+  // v1.9（PC版 v0.9.15）: テーマのイラストをカードの先頭に出す（図解は補助として残す）
+  const illus = (window.SSAI_THEMES.illustrations || {})[subject + "||" + topic];
+  el.innerHTML = (illus ? "<img class='yc-illustration' src='illustrations/" + esc(illus) + "' alt='" + esc(topic) + "のイラスト' loading='lazy'>" : "") +
+    "<div class='yc-title'>📌 " + esc(topic) + " の要点</div>" +
     "<ol>" + card.points.map((p, i) =>
       "<li><strong>" + esc(p.word) + "</strong>：" + esc(p.text) +
       (p.diagram ? "<span class='yc-diagram' data-diagram-idx='" + i + "'></span>" : "") + "</li>").join("") + "</ol>";
@@ -1251,7 +1387,8 @@ function compareTablesFor(subject, topic) {
   // PC版と同じ組み立て：混同ペアのうち2語ともこのテーマの用語カード／
   // ガイドのキーワードに含まれる組を最大2組返す。
   const terms = new Set();
-  const subj = (window.SSAI_TERMS || []).find((x) => x.subject === subject);
+  // v2.5: 用語・ペアとも、チャット連携で追加した分も対象にする
+  const subj = mergedTermSubject(subject);
   if (subj) {
     const t = subj.topics.find((x) => x.topic === topic);
     if (t) (t.cards || []).forEach((c) => { if (c.term) terms.add(c.term); });
@@ -1260,7 +1397,7 @@ function compareTablesFor(subject, topic) {
   if (g) (g.keywords || []).forEach((k) => { if (k.word) terms.add(k.word); });
   if (!terms.size) return [];
   const out = [];
-  (window.SSAI_PAIRS || []).forEach((p) => {
+  allPairs().forEach((p) => {
     if (out.length >= 2 || p.subject !== subject) return;
     const pts = p.terms || [];
     if (pts.length < 2 || !pts.slice(0, 2).every((t) => terms.has(t))) return;
@@ -1327,6 +1464,7 @@ function prepareFromSeed(seed) {
     choices: sh.choices, correct: sh.correct,
     answer_text: seed.answer_text || "", explanation: seed.explanation || "",
     concept: seed.concept || "",
+    source: seed.source || "seed",
     stock_id: seed.id
   };
 }
@@ -1545,7 +1683,8 @@ function renderQuizItem() {
   const q = session.items[session.idx];
   session.answered = false;
   $("quiz-count").textContent = (session.idx + 1) + "問目 / 全" + session.items.length + "問（あと" + (session.items.length - session.idx - 1) + "問）";
-  $("quiz-where").textContent = session.label + "｜" + q.subject + "｜" + q.topic;
+  $("quiz-where").textContent = session.label + "｜" + q.subject + "｜" + q.topic
+    + (q.source === "gen" ? "｜生成した問題（ストック生成）" : "");
   $("quiz-question").textContent = q.question;
   $("quiz-feedback").textContent = "";
   session.lastAnswer = null;
@@ -1661,7 +1800,7 @@ function nextQuizItem() {
    画面の描画とナビゲーション
    ============================================================ */
 const VIEWS = ["login", "home", "themes", "guide", "quiz", "wrong", "terms", "yoten", "stats", "settings",
-  "exam", "examrun", "examresult", "plan", "notes", "reportguide", "rq"];
+  "exam", "examrun", "examresult", "plan", "notes", "reportguide", "rq", "studyplan", "subjectreview", "memorycheck"];
 function showView(name) {
   VIEWS.forEach((v) => { $("view-" + v).hidden = v !== name; });
   document.querySelectorAll("#tabbar button").forEach((b) =>
@@ -1941,10 +2080,15 @@ function renderThemes() {
   list.innerHTML = "";
   (THEMES.topics[subject] || []).forEach((tp) => {
     const st = stats.get(subject + "||" + tp);
+    // v2.6（第2弾-8）: 目次チェック表示。進み具合100%で自動✓、手動チェックは端末ローカル
+    const prog = topicProgress(subject, tp);
+    const manualDone = themeCheckLoadV26()[subject + "|" + tp] === true;
+    const isDone = manualDone || prog >= 100;
     const div = document.createElement("div");
-    div.className = "item";
-    div.innerHTML = "<div class='body'><strong>" + esc(tp) + "</strong><br>" +
-      "<span class='muted'>" + (st ? st.total + "問解いて " + st.correct + "問正解" : "まだ解いていないテーマ") +
+    div.className = "item" + (isDone ? " theme-done-v26" : "");
+    div.innerHTML = "<div class='body'><strong>" + (isDone ? "✓ " : "") + esc(tp) + "</strong>" +
+      (isDone ? " <span class='vague-badge-v26' style='background:#2e9e4f'>✓ 終わった</span>" : "") + "<br>" +
+      "<span class='muted'>" + (st ? st.total + "問解いて " + st.correct + "問正解・進み具合 " + prog + "%" : "まだ解いていないテーマ") +
       "</span></div>";
     const favB = document.createElement("button");
     favB.className = "secondary";
@@ -1966,6 +2110,26 @@ function renderThemes() {
     b.textContent = "解く";
     b.addEventListener("click", () => startThemeSession(subject, tp));
     div.appendChild(b);
+    // v2.6（第2弾-5）: テーマ確認テスト（3問）
+    const tcB = document.createElement("button");
+    tcB.className = "secondary";
+    tcB.textContent = "確認3問";
+    tcB.title = "このテーマの確認テスト（3問）";
+    tcB.addEventListener("click", () => startThemeCheckV26(subject, tp));
+    div.appendChild(tcB);
+    // v2.6（第2弾-8）: 目次チェックの付け外し（端末ローカル）
+    const doneB = document.createElement("button");
+    doneB.className = "secondary";
+    doneB.textContent = manualDone ? "✓外す" : "✓終わった";
+    doneB.title = "終わった範囲のチェック";
+    doneB.addEventListener("click", () => {
+      const m = themeCheckLoadV26();
+      if (m[subject + "|" + tp]) delete m[subject + "|" + tp];
+      else m[subject + "|" + tp] = true;
+      themeCheckSaveV26(m);
+      renderThemes();
+    });
+    div.appendChild(doneB);
     list.appendChild(div);
   });
   fillDrillTopics();
@@ -2133,11 +2297,40 @@ function renderWrong() {
 }
 
 /* ---------- 用語カード・言葉クイズ ---------- */
+/* v2.5: 同梱の用語カードに、チャット連携で追加した用語カード
+   （user_term_cards・同期で受け取る）を合流した形を返す。
+   追加分は同梱分と重なる用語を二重に出さず、card.userAdded で区別する。 */
+function mergedTermSubject(subject) {
+  const base = (window.SSAI_TERMS || []).find((x) => x.subject === subject);
+  const topics = [];
+  const byTopic = new Map();
+  if (base) base.topics.forEach((t) => {
+    const entry = { topic: t.topic, cards: (t.cards || []).slice() };
+    topics.push(entry);
+    byTopic.set(t.topic, entry);
+  });
+  (DB.userTerms || []).forEach(({ row }) => {
+    if (!row || row.subject !== subject) return;
+    const tp = row.topic || "";
+    let entry = byTopic.get(tp);
+    if (!entry) {
+      entry = { topic: tp, cards: [] };
+      topics.push(entry);
+      byTopic.set(tp, entry);
+    }
+    if (!entry.cards.some((c) => c.term === row.word)) {
+      entry.cards.push({ term: row.word, reading: row.reading || "",
+        meaning: row.meaning || "", note: row.note || "",
+        example: row.example || "", userAdded: true });
+    }
+  });
+  return { subject: subject, topics: topics };
+}
 function currentTermEntry() {
   const s = $("tc-subject").value;
   const t = $("tc-topic").value;
-  const subj = (window.SSAI_TERMS || []).find((x) => x.subject === s);
-  if (!subj) return { cards: [] };
+  const subj = mergedTermSubject(s);
+  if (!subj.topics.length) return { cards: [] };
   const topic = subj.topics.find((x) => x.topic === t) || subj.topics[0];
   return topic || { cards: [] };
 }
@@ -2151,10 +2344,10 @@ function fillTermSelects() {
       sSel.appendChild(o);
     });
   }
-  const subj = (window.SSAI_TERMS || []).find((x) => x.subject === sSel.value);
+  const subj = mergedTermSubject(sSel.value);
   const cur = tSel.value;
   tSel.innerHTML = "";
-  (subj ? subj.topics : []).forEach((t) => {
+  subj.topics.forEach((t) => {
     const o = document.createElement("option");
     o.value = t.topic; o.textContent = t.topic;
     tSel.appendChild(o);
@@ -2166,10 +2359,23 @@ function renderTermCards() {
   const entry = currentTermEntry();
   const list = $("tc-list");
   list.innerHTML = "";
-  (entry.cards || []).forEach((c) => {
+  // v2.6（第2弾-7）: 「あいまい」（端末ローカル）を先に出し、絞り込みもできるようにする
+  const vagueMarks = vagueLoadV26();
+  const vSubject = $("tc-subject").value, vTopic = $("tc-topic").value;
+  const isVague = (c) => vagueMarks[vSubject + "|" + vTopic + "|" + c.term] === true;
+  const vagueOnly = ($("tc-vague-only-v26") || {}).checked;
+  let cards = (entry.cards || []).slice().sort((a, b) => (isVague(b) ? 1 : 0) - (isVague(a) ? 1 : 0));
+  if (vagueOnly) cards = cards.filter(isVague);
+  if (vagueOnly && !cards.length) {
+    list.innerHTML = "<p class='muted'>このテーマに「あいまい」のカードはまだ無いよ。カードの「🤔 あいまい」ボタンで付けられるよ。</p>";
+  }
+  cards.forEach((c) => {
     const div = document.createElement("div");
     div.className = "card-term";
-    div.innerHTML = "<div class='term'>" + rubyTerm(c) + "</div>" +
+    div.innerHTML = "<div class='term'>" + rubyTerm(c) +
+      (isVague(c) ? " <span class='vague-badge-v26'>🤔 あいまい</span>" : "") +
+      // v2.5: チャット連携で追加したカードには印を付ける
+      (c.userAdded ? " <span class='muted' style='font-size:.8em'>（チャット連携で追加）</span>" : "") + "</div>" +
       "<div class='meaning' hidden><strong>" + esc(c.meaning) + "</strong>" +
       (c.note ? "<br><span class='muted'>" + esc(c.note) + "</span>" : "") +
       // v1.3（項目46）: 例文
@@ -2184,6 +2390,19 @@ function renderTermCards() {
       favB.textContent = on ? "⭐ お気に入り済み" : "☆ お気に入り";
     });
     div.appendChild(favB);
+    // v2.6（第2弾-7）: 「あいまい」の付け外し
+    const vagueB = document.createElement("button");
+    vagueB.className = "secondary";
+    vagueB.textContent = isVague(c) ? "🤔 あいまい✓（外す）" : "🤔 あいまい";
+    vagueB.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      const m = vagueLoadV26();
+      const key = vSubject + "|" + vTopic + "|" + c.term;
+      if (m[key]) delete m[key]; else m[key] = true;
+      vagueSaveV26(m);
+      renderTermCards();
+    });
+    div.appendChild(vagueB);
     div.addEventListener("click", () => {
       const m = div.querySelector(".meaning");
       m.hidden = !m.hidden;
@@ -2199,7 +2418,7 @@ function startWordQuiz() {
     $("wq-message").textContent = "クイズを作るには、このテーマのカードが足りないよ。別のテーマを選んでみてね。";
     return;
   }
-  const subj = (window.SSAI_TERMS || []).find((x) => x.subject === $("tc-subject").value);
+  const subj = mergedTermSubject($("tc-subject").value);
   const subjectPool = subj ? subj.topics.flatMap((t) => t.cards) : [];
   const distractPool = subjectPool.length >= 4 ? subjectPool : pool;
   // v1.3（項目19）: 範囲（科目全体）と問題数を選べるようにした
@@ -2806,13 +3025,30 @@ function cancelNoteEditKeepMsg() {
 
 /* ---------- 混同ペア（パソコン版と同じ遊び方。結果は記録しない） ---------- */
 let cpQuiz = null;
+/* v2.5: 同梱の混同ペアに、チャット連携で追加した混同ペア
+   （user_confused_pairs・同期で受け取る）を同梱分と同じ形に直して合流する。
+   同じ（科目・2語）の組は二重に出さない。 */
+function allPairs() {
+  const list = (window.SSAI_PAIRS || []).slice();
+  (DB.userPairs || []).forEach(({ row }) => {
+    if (!row || !row.term_a || !row.term_b) return;
+    const dup = list.some((p) => p.subject === row.subject &&
+      (p.terms || []).includes(row.term_a) && (p.terms || []).includes(row.term_b));
+    if (dup) return;
+    list.push({ subject: row.subject, terms: [row.term_a, row.term_b],
+      details: [{ term: row.term_a, description: row.desc_a || "" },
+                { term: row.term_b, description: row.desc_b || "" }],
+      key_point: row.key_point || "", userAdded: true });
+  });
+  return list;
+}
 function fillPairSubjects() {
   const sel = $("cp-subject");
   if (sel.options.length) return;
   const all = document.createElement("option");
   all.value = ""; all.textContent = "全科目";
   sel.appendChild(all);
-  [...new Set((window.SSAI_PAIRS || []).map((p) => p.subject))].forEach((s) => {
+  [...new Set(allPairs().map((p) => p.subject))].forEach((s) => {
     const o = document.createElement("option");
     o.value = s; o.textContent = s;
     sel.appendChild(o);
@@ -2820,7 +3056,7 @@ function fillPairSubjects() {
 }
 function filteredPairs() {
   const s = $("cp-subject").value;
-  return (window.SSAI_PAIRS || []).filter((p) => !s || p.subject === s);
+  return allPairs().filter((p) => !s || p.subject === s);
 }
 function renderPairs() {
   fillPairSubjects();
@@ -2831,7 +3067,9 @@ function renderPairs() {
   list.forEach((p) => {
     const sec = document.createElement("section");
     sec.className = "card-term pair-item";
-    sec.innerHTML = "<h3>" + esc(p.subject) + "｜" + p.terms.map(esc).join(" と ") + "</h3>" +
+    sec.innerHTML = "<h3>" + esc(p.subject) + "｜" + p.terms.map(esc).join(" と ") +
+      // v2.5: チャット連携で追加した組には印を付ける
+      (p.userAdded ? " <span class='muted' style='font-size:.8em'>（チャット連携で追加）</span>" : "") + "</h3>" +
       p.details.map((d) => "<div><strong>" + esc(d.term) + "</strong>：" +
         esc(d.description) + "</div>").join("") +
       (p.key_point ? "<div class='pair-key'>見分けポイント：" + esc(p.key_point) + "</div>" : "");
@@ -2844,11 +3082,11 @@ function startPairsQuiz() {
     $("cp-message").textContent = "クイズを作るには組が足りません。科目を「全科目」にしてみてね。";
     return;
   }
-  const allPairs = window.SSAI_PAIRS || [];
+  const everyPair = allPairs();
   const picks = shuffleArr(pool).slice(0, Math.min(5, pool.length));
   const items = picks.map((pair) => {
     const detail = pair.details[Math.floor(Math.random() * pair.details.length)];
-    const others = shuffleArr(allPairs.filter((p) => p !== pair)
+    const others = shuffleArr(everyPair.filter((p) => p !== pair)
       .flatMap((p) => p.terms).filter((t) => !pair.terms.includes(t))).slice(0, 4 - pair.terms.length);
     const choices = shuffleArr([...new Set([...pair.terms.filter((t) => t !== detail.term),
       detail.term, ...others])].slice(0, 4));
@@ -3382,6 +3620,653 @@ $("home-goto-rq").addEventListener("click", renderRqList);
 $("home-goto-rg2").addEventListener("click", () => { renderReportGuideSubjects(); showView("reportguide"); });
 $("rq-back-home").addEventListener("click", () => { renderHome(); showView("home"); });
 $("quiz-muse-btn").addEventListener("click", askMusePhone);
+/* ================= v2.0（PC版 v0.9.16）: 学習計画・科目総復習・暗記チェック =================
+   学習計画と科目総復習は端末内の記録（同期済みデータ）からその場で計算する。
+   暗記チェックはスマホ版ローカルの予定（localStorage）で管理する。
+   ※PC版の暗記チェック（report_memory_checks）とは同期しない（PC版も端末ローカル）。 */
+const PLAN_START_V20 = "2026-11-27";
+const PLAN_PHASE1_END_V20 = "2027-01-04";
+const PLAN_EXAM_V20 = "2027-01-25";
+const PLAN_TOTAL_V20 = 62;
+const PLAN_DAILY_CAP_V20 = 3;
+const PLAN_WEEKLY_V20 = 9;
+const MC_KEY_V20 = "ssai_memory_checks_v20";
+const MC_INTERVALS_V20 = [3, 14, 30];
+
+function addDaysStrV20(dateStr, n) {
+  const d = new Date(dateStr + "T00:00:00+09:00");
+  d.setDate(d.getDate() + n);
+  return jstDateStr(d);
+}
+function planPhaseV20(today) {
+  if (today <= PLAN_PHASE1_END_V20) return 1;
+  if (daysBetween(today, PLAN_EXAM_V20) <= 3) return 3;
+  return 2;
+}
+const PLAN_PHASE_ADVICE_V20 = {
+  1: "今は第1期（レポートを理解する期間）だよ。中心は理解ガイド・レポートの問題を解く・要点まとめ・用語カード。",
+  2: "今は第2期（仕上げる期間）だよ。中心はレポート形式の模擬試験・科目総復習・暗記チェック・抜き出しドリル・漢字の仕上げモード。",
+  3: "試験直前だよ。暗記チェック・間違えた問題だけ・用語カードの最終確認が中心。新しいことは始めないで大丈夫。"
+};
+const PLAN_USAGE_V20 = [
+  ["学習サポートAI（パソコン版）", "家で、レポート理解ガイドを読んで理解する・問題を解く・レポートの問題を解く"],
+  ["学習サポートAI（スマホ版）", "外出先や横になっているときに、用語カードと復習をする"],
+  ["ピクル", "思い出し練習（キーワード入りの説明と一問一答）"],
+  ["ミューズ（チャット）", "分からない言葉を聞く・レポートの写真を送る・計画の見直し"]
+];
+const PLAN_PHASES_V20 = [
+  [1, "今〜2027-01-04", "レポートを理解する期間", "理解ガイド／レポートの問題を解く／要点まとめ／用語カード", "形式ドリル／漢字ドリル／復習"],
+  [2, "2027-01-05〜試験前日", "仕上げる期間", "レポート形式の模擬試験／科目総復習／暗記チェック／抜き出しドリル／漢字の仕上げモード", "間違えた問題の復習／混同ペア"],
+  [3, "試験直前の数日", "最終確認", "暗記チェック／間違えた問題だけ／用語カードの最終確認", "新しいことは始めない"]
+];
+
+/* v2.5: 「理解した」の判定。進み具合100%の自動判定に、PC版から同期される
+   「理解した」マーク（レポート行の _understood）を加える（PC版の
+   reports_summary と同じ考え方）。 */
+function reportUnderstoodV25(r) {
+  return (r.progress || 0) >= 100 || Number(r._understood) === 1;
+}
+function computeStudyPlanPhoneV20() {
+  const today = todayJST();
+  const reports = DB.reports || [];
+  const total = reports.length || PLAN_TOTAL_V20;
+  const understood = reports.filter(reportUnderstoodV25).length;
+  const remaining = Math.max(0, total - understood);
+  let expected;
+  if (today <= PLAN_PHASE1_END_V20) {
+    const span = Math.max(1, daysBetween(PLAN_START_V20, PLAN_PHASE1_END_V20));
+    const elapsed = Math.min(span, Math.max(0, daysBetween(PLAN_START_V20, today)));
+    expected = Math.round(total * elapsed / span);
+  } else {
+    expected = total;
+  }
+  const diff = understood - expected;
+  const status = remaining === 0 ? "done" : (diff >= -2 ? "on_track" : "behind");
+  const inPhase1 = today <= PLAN_PHASE1_END_V20;
+  const targetDate = inPhase1 ? PLAN_PHASE1_END_V20 : PLAN_EXAM_V20;
+  const daysLeft = Math.max(0, daysBetween(today, targetDate));
+  let perDay = 0, cappedFinish = null;
+  if (remaining > 0) {
+    if (daysLeft > 0) {
+      perDay = Math.round(remaining / daysLeft * 10) / 10;
+      if (perDay > PLAN_DAILY_CAP_V20) {
+        perDay = PLAN_DAILY_CAP_V20;
+        cappedFinish = addDaysStrV20(today, Math.ceil(remaining / PLAN_DAILY_CAP_V20));
+      }
+    } else { perDay = remaining; }
+  }
+  // 問題を解くペース（レポート連動）
+  const sets = {};
+  (window.SSAI_REPORT_QUESTIONS || []).forEach((st) => { sets[st.subject + "__" + st.report_no] = (st.questions || []).length; });
+  let qTotal = 0, qAnswered = 0;
+  reports.filter(reportUnderstoodV25).forEach((r) => {
+    const topics = r.topics || [];
+    qTotal += visibleSeeds().filter((s) => s.subject === r.subject && topics.includes(s.topic)).length;
+    qTotal += sets[r.subject + "__" + r.report_no] || 0;
+    qAnswered += DB.attempts.filter((a) => a.row.subject === r.subject &&
+      (topics.includes(a.row.topic) || a.row.topic === "レポート" + r.report_no)).length;
+  });
+  // おすすめの1週間
+  const subjects = Object.keys((window.SSAI_THEMES && window.SSAI_THEMES.topics) || {});
+  const weeks = Math.max(0, Math.floor(daysBetween(PLAN_START_V20, today) / 7));
+  const satSubject = subjects.length ? subjects[weeks % subjects.length] : "";
+  const dow = new Date(today + "T00:00:00+09:00").getDay();
+  const weekDef = [
+    [1, "月曜日", "新しいレポート 2件 ＋ その範囲の問題を解く ＋ ピクルで前日分を思い出す"],
+    [2, "火曜日", "新しいレポート 2件 ＋ その範囲の問題を解く ＋ ピクルで前日分を思い出す"],
+    [3, "水曜日", "新しいレポート 1件 ＋ 復習（暗記チェック・間違えた問題）"],
+    [4, "木曜日", "新しいレポート 2件 ＋ その範囲の問題を解く ＋ ピクルで前日分を思い出す"],
+    [5, "金曜日", "新しいレポート 2件 ＋ その範囲の問題を解く ＋ ピクルで前日分を思い出す"],
+    [6, "土曜日", "科目総復習 ＋ レポート形式の模擬試験（今週は「" + satSubject + "」）"],
+    [0, "日曜日", "振り返りと計画の見直し（軽め。アプリを開かない日でもよい）"]
+  ];
+  return { today, total, understood, remaining, expected, diff, status,
+    days_left: daysLeft, target_date: targetDate, per_day: perDay, capped_finish: cappedFinish,
+    questions_total: qTotal, questions_answered: qAnswered,
+    phase: planPhaseV20(today),
+    week: weekDef.map((w) => ({ label: w[1], content: w[2], is_today: w[0] === dow })) };
+}
+
+function renderStudyPlanPhoneV20() {
+  const body = $("studyplan-body");
+  if (!body) return;
+  const p = computeStudyPlanPhoneV20();
+  const statusText = p.status === "done" ? "全レポート理解できたよ。お疲れさま！"
+    : p.status === "on_track" ? "計画とだいたい同じペースだよ"
+    : "計画より少しゆっくりめだよ（目安だから、あせらなくて大丈夫）";
+  let html = "<p><strong>" + PLAN_PHASE_ADVICE_V20[p.phase] + "</strong></p>";
+  html += "<h3>進み具合</h3><p>理解したレポート：<strong>" + p.understood + " / " + p.total + "</strong>（あと " + p.remaining + " 件）<br>" +
+    "今日の時点の計画の目安：" + p.expected + " 件 → " + statusText + "</p>";
+  if (p.remaining > 0) {
+    html += "<p>これからの目安：" + p.target_date + " までに終わらせるには、1日あたり約 <strong>" + p.per_day + " 件</strong>（あと " + p.days_left + " 日）" +
+      (p.capped_finish ? "<br>※詰め込み防止のため1日" + PLAN_DAILY_CAP_V20 + "件までで計算すると、終わる目安は " + p.capped_finish + " ごろだよ" : "") + "</p>";
+  }
+  html += "<p>問題を解くペース（レポート連動）：理解したレポートの範囲の問題は <strong>" + p.questions_total + " 問</strong>あって、これまでに <strong>" + p.questions_answered + " 回</strong>解いたよ。レポートを1つ理解したら、その範囲の問題も解くのが目安だよ。</p>";
+  html += "<h3>アプリの使い分け</h3><table class='v20-table'>" + PLAN_USAGE_V20.map((u) =>
+    "<tr><th>" + esc(u[0]) + "</th><td>" + esc(u[1]) + "</td></tr>").join("") + "</table>";
+  html += "<h3>おすすめの1週間（週" + PLAN_WEEKLY_V20 + "レポートのペースに合わせた目安）</h3><table class='v20-table'>" +
+    p.week.map((w) => "<tr" + (w.is_today ? " class='v20-today'" : "") + "><th>" + esc(w.label) + (w.is_today ? "（今日）" : "") + "</th><td>" + esc(w.content) + "</td></tr>").join("") + "</table>";
+  html += "<h3>期間ごとに中心に使う機能</h3><table class='v20-table'>" + PLAN_PHASES_V20.map((ph) =>
+    "<tr" + (ph[0] === p.phase ? " class='v20-today'" : "") + "><th>第" + ph[0] + "期<br>" + esc(ph[1]) + "</th><td><strong>" + esc(ph[2]) + "</strong><br>中心：" + esc(ph[3]) + "<br>補助：" + esc(ph[4]) + "</td></tr>").join("") + "</table>";
+  html += "<p class='muted'>試験開始は仮で 2027-01-25 と置いているよ。正確な日程が分かったら差し替えるね。計画は目安で、ノルマじゃないよ。</p>";
+  body.innerHTML = html;
+}
+
+/* ---- 科目総復習（スマホ版） ---- */
+function initSubjectReviewPhoneV20() {
+  const box = $("sr-subjects");
+  if (!box || box.dataset.done) return;
+  box.dataset.done = "1";
+  Object.keys((window.SSAI_THEMES && window.SSAI_THEMES.topics) || {}).forEach((s) => {
+    const b = document.createElement("button");
+    b.className = "secondary";
+    b.style.margin = "0 .4em .4em 0";
+    b.textContent = s;
+    b.addEventListener("click", () => renderSubjectReviewPhoneV20(s));
+    box.appendChild(b);
+  });
+}
+function renderSubjectReviewPhoneV20(subject) {
+  const body = $("sr-body");
+  if (!body) return;
+  body.innerHTML = "";
+  const title = document.createElement("h3");
+  title.textContent = "📚 " + subject + " の総復習";
+  body.appendChild(title);
+  // 1. レポートの進み具合
+  const reps = (DB.reports || []).filter((r) => r.subject === subject)
+    .sort((a, b) => (a.report_no || 0) - (b.report_no || 0));
+  const done = reps.filter(reportUnderstoodV25).length;
+  const sec1 = document.createElement("div");
+  sec1.innerHTML = "<h4>1. レポートの進み具合（" + done + " / " + reps.length + "）</h4>" +
+    (reps.length ? "<ul>" + reps.map((r) => "<li>" + esc(r.name || ("レポート" + r.report_no)) + "：" +
+      (reportUnderstoodV25(r) ? "理解した" : (r.progress || 0) > 0 ? "理解中" : "未着手") + "（" + (r.progress || 0) + "%）</li>").join("") + "</ul>"
+      : "<p class='muted'>この科目のレポートはまだ登録されていないよ。</p>");
+  body.appendChild(sec1);
+  // 2. 要点カード
+  const sec2 = document.createElement("div");
+  sec2.innerHTML = "<h4>2. 要点カード</h4>";
+  let yotenCount = 0;
+  ((window.SSAI_THEMES.topics || {})[subject] || []).forEach((topic) => {
+    const holder = document.createElement("div");
+    holder.className = "yoten-card";
+    if (renderYotenCardInto(holder, subject, topic)) { sec2.appendChild(holder); yotenCount++; }
+  });
+  if (!yotenCount) sec2.innerHTML += "<p class='muted'>要点カードはないよ。</p>";
+  body.appendChild(sec2);
+  // 3. 用語カード
+  const terms = (window.SSAI_TERMS || []).filter((t) => t.subject === subject);
+  const sec3 = document.createElement("div");
+  sec3.innerHTML = "<h4>3. 用語カード（" + terms.length + "語）</h4>" + (terms.length
+    ? terms.map((t) => "<details><summary>" + esc(t.word) + (t.reading ? "（" + esc(t.reading) + "）" : "") + "</summary><p>" + esc(t.meaning || "") + "</p></details>").join("")
+    : "<p class='muted'>用語カードはないよ。</p>");
+  body.appendChild(sec3);
+  // 4. 間違えた問題
+  const latest = new Map();
+  DB.attempts.forEach((a) => { if (a.row.subject === subject) latest.set(a.row.question, a.row); });
+  const wrongs = [...latest.values()].filter((r) => !r.is_correct)
+    .sort((a, b) => (b.created_at || 0) - (a.created_at || 0)).slice(0, 10);
+  const sec4 = document.createElement("div");
+  sec4.innerHTML = "<h4>4. 間違えた問題（最近のもの・最大10問）</h4>" + (wrongs.length
+    ? wrongs.map((r) => {
+        let ans = r.answer_text || "";
+        if (!ans && r.format === "choice") { try { ans = (JSON.parse(r.choices || "[]"))[r.correct_index] || ""; } catch (e) { ans = ""; } }
+        return "<div class='item'><div class='body'><strong>" + esc(r.question) + "</strong><br><span class='muted'>答え：" + esc(ans) + "</span></div></div>";
+      }).join("")
+    : "<p class='muted'>間違えた問題はないよ。</p>");
+  body.appendChild(sec4);
+  // 5. 混同ペア（v2.5: チャット連携で追加した組も含める）
+  const pairs = allPairs().filter((p) => p.subject === subject);
+  if (pairs.length) {
+    const sec5 = document.createElement("div");
+    sec5.innerHTML = "<h4>5. 混同ペア</h4>" + pairs.map((p) =>
+      "<p><strong>" + esc((p.terms || []).join(" ／ ")) + "</strong><br><span class='muted'>" + esc(p.key_point || "") + "</span></p>").join("");
+    body.appendChild(sec5);
+  }
+  if (body.scrollIntoView) body.scrollIntoView();
+}
+
+/* ---- 暗記チェック（スマホ版ローカル） ---- */
+function mcLoadV20() { try { return JSON.parse(localStorage.getItem(MC_KEY_V20) || "{}"); } catch (e) { return {}; } }
+function mcSaveV20(m) { try { localStorage.setItem(MC_KEY_V20, JSON.stringify(m)); } catch (e) {} }
+function mcCompletedSetsV20() {
+  const out = [];
+  (window.SSAI_REPORT_QUESTIONS || []).forEach((st) => {
+    const qs = st.questions || [];
+    if (!qs.length) return;
+    let latest = 0, all = true;
+    qs.forEach((q) => {
+      let best = null;
+      DB.attempts.forEach((a) => {
+        const r = a.row;
+        if (r.subject === st.subject && r.topic === "レポート" + st.report_no && r.question === q.question && r.is_correct) {
+          if (best === null || r.created_at < best) best = r.created_at;
+        }
+      });
+      if (best === null) all = false; else if (best > latest) latest = best;
+    });
+    if (all && latest) out.push({ subject: st.subject, report_no: st.report_no, completed_at: latest });
+  });
+  return out;
+}
+function mcEnsureV20() {
+  const m = mcLoadV20();
+  let changed = false;
+  mcCompletedSetsV20().forEach((c) => {
+    const key = c.subject + "__" + c.report_no;
+    if (!m[key]) {
+      m[key] = { stage: 0, due: addDaysStrV20(jstDateStr(new Date(c.completed_at * 1000)), MC_INTERVALS_V20[0]) };
+      changed = true;
+    }
+  });
+  if (changed) mcSaveV20(m);
+  return m;
+}
+function mcDueCountV20() {
+  const today = todayJST();
+  const m = mcEnsureV20();
+  return Object.values(m).filter((v) => v.due <= today).length;
+}
+function updateHomeMemoryDueV20() {
+  const el = $("home-memory-due");
+  if (!el || !DB.loaded) return;
+  const n = mcDueCountV20();
+  el.textContent = n ? "🧠 暗記チェックが " + n + " 件あるよ（下の「もっと使う」から開けるよ）" : "";
+}
+function renderMemoryCheckListPhoneV20() {
+  const list = $("mc-list"), body = $("mc-body"), msg = $("mc-message");
+  if (!list) return;
+  if (body) body.innerHTML = "";
+  if (msg) msg.textContent = "";
+  const today = todayJST();
+  const m = mcEnsureV20();
+  const entries = Object.keys(m).map((k) => {
+    const i = k.lastIndexOf("__");
+    return { key: k, subject: k.slice(0, i), report_no: Number(k.slice(i + 2)), stage: m[k].stage, due: m[k].due };
+  }).sort((a, b) => (a.due < b.due ? -1 : 1));
+  const due = entries.filter((e) => e.due <= today);
+  const upcoming = entries.filter((e) => e.due > today);
+  let html = "<p class='muted'>レポートの問題を全部解けたレポートについて、間をあけて暗記テストを出すよ（1回目＝3日後、2回目＝14日後、3回目以降＝30日後）。用語の穴埋め中心だよ。</p>";
+  html += "<h3>今日の暗記チェック（" + due.length + "件）</h3>";
+  html += due.length ? "" : "<p class='muted'>今日の分はないよ。</p>";
+  list.innerHTML = html;
+  due.forEach((e) => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = "<div class='body'><strong>" + esc(e.subject) + " レポート" + e.report_no + "</strong><br><span class='muted'>" + (e.stage + 1) + "回目／期限 " + e.due + "</span></div>";
+    const b = document.createElement("button");
+    b.className = "primary";
+    b.textContent = "始める";
+    b.addEventListener("click", () => startMemoryCheckPhoneV20(e));
+    div.appendChild(b);
+    list.appendChild(div);
+  });
+  if (upcoming.length) {
+    const up = document.createElement("div");
+    up.innerHTML = "<h3>これからの予定</h3><ul>" + upcoming.map((e) =>
+      "<li>" + esc(e.subject) + " レポート" + e.report_no + "：" + (e.stage + 1) + "回目・" + e.due + "</li>").join("") + "</ul>";
+    list.appendChild(up);
+  }
+}
+function mcBuildItemsPhoneV20(subject, reportNo) {
+  const entry = (DB.reportList || []).find((e) => e.row.subject === subject && Number(e.row.report_no) === Number(reportNo));
+  const topics = entry ? (entry.row.topics || []) : [];
+  const pool = visibleSeeds().filter((s) => s.subject === subject && topics.includes(s.topic));
+  const fillin = shuffleArr(pool.filter((s) => s.format === "fillin"));
+  const choice = shuffleArr(pool.filter((s) => s.format === "choice"));
+  let items = fillin.concat(choice).slice(0, 8).map(prepareFromSeed);
+  if (items.length < 3) {
+    const st = (window.SSAI_REPORT_QUESTIONS || []).find((x) => x.subject === subject && Number(x.report_no) === Number(reportNo));
+    if (st) {
+      const extra = (st.questions || []).filter((q) => q.format === "fillin" || q.format === "choice")
+        .map((q) => rqPrepare({ set: st, q }));
+      items = items.concat(extra).slice(0, 8);
+    }
+  }
+  return items;
+}
+let mcStateV20 = null;
+function startMemoryCheckPhoneV20(entry) {
+  const items = mcBuildItemsPhoneV20(entry.subject, entry.report_no);
+  const msg = $("mc-message");
+  if (items.length < 1) { if (msg) msg.textContent = "このレポートの範囲の作り置き問題が、今は出し切っています。"; return; }
+  mcStateV20 = { key: entry.key, subject: entry.subject, report_no: entry.report_no, stage: entry.stage, items, pos: 0, correct: 0, answered: false };
+  $("mc-list").innerHTML = "";
+  renderMcQuestionPhoneV20();
+}
+function renderMcQuestionPhoneV20() {
+  const body = $("mc-body");
+  const st = mcStateV20;
+  if (!body || !st) return;
+  const item = st.items[st.pos];
+  st.answered = false;
+  body.innerHTML = "";
+  const prog = document.createElement("p");
+  prog.className = "muted";
+  prog.textContent = "暗記チェック：" + st.subject + " レポート" + st.report_no + "（" + (st.pos + 1) + "問目 / 全" + st.items.length + "問・あと" + (st.items.length - st.pos - 1) + "問）";
+  body.appendChild(prog);
+  const qt = document.createElement("div");
+  qt.className = "qtext";
+  qt.textContent = item.question;
+  body.appendChild(qt);
+  const fb = document.createElement("div");
+  body.appendChild(fb);
+  const finish = async (selIdx, selText, correct) => {
+    if (st.answered) return;
+    st.answered = true;
+    if (correct) st.correct++;
+    try { await recordAnswer(item, selIdx, selText, correct, null, ""); } catch (e) {}
+    const ansText = item.format === "choice" ? (item.choices[item.correct] || "") : (item.answer_text || "");
+    fb.innerHTML = "<p><strong>" + (correct ? "⭕ 正解！" : "❌ 不正解") + "</strong></p><p>答え：" + esc(ansText) + "</p>" +
+      (item.explanation ? "<p class='muted'>" + esc(item.explanation) + "</p>" : "");
+    const next = document.createElement("button");
+    next.className = "primary";
+    next.textContent = st.pos + 1 < st.items.length ? "次の問題へ" : "結果を見る";
+    next.addEventListener("click", () => {
+      st.pos++;
+      if (st.pos < st.items.length) renderMcQuestionPhoneV20(); else finishMemoryCheckPhoneV20();
+    });
+    fb.appendChild(next);
+    if (fb.scrollIntoView) setTimeout(() => fb.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  };
+  if (item.format === "choice") {
+    (item.choices || []).forEach((c, i) => {
+      const b = document.createElement("button");
+      b.className = "choice";
+      b.textContent = c;
+      b.addEventListener("click", () => finish(i, c, i === item.correct));
+      body.appendChild(b);
+    });
+  } else {
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = "答えを入力";
+    body.appendChild(input);
+    const b = document.createElement("button");
+    b.className = "primary";
+    b.textContent = "答える";
+    b.addEventListener("click", () => finish(-1, input.value, normalizeText(input.value) === normalizeText(item.answer_text || "")));
+    body.appendChild(b);
+  }
+}
+function finishMemoryCheckPhoneV20() {
+  const st = mcStateV20;
+  const body = $("mc-body");
+  const m = mcLoadV20();
+  const nextStage = st.stage + 1;
+  const interval = MC_INTERVALS_V20[Math.min(nextStage, MC_INTERVALS_V20.length - 1)];
+  const nextDue = addDaysStrV20(todayJST(), interval);
+  m[st.key] = { stage: nextStage, due: nextDue };
+  mcSaveV20(m);
+  if (body) body.innerHTML = "<p><strong>暗記チェック終わり：" + st.correct + " / " + st.items.length + " 問正解。お疲れさま。</strong></p>" +
+    "<p class='muted'>次回は " + nextDue + " ごろだよ。</p>";
+  mcStateV20 = null;
+}
+
+/* ---- 画面遷移フックとボタン ---- */
+const _showViewV20 = showView;
+showView = function (name) {
+  _showViewV20(name);
+  try {
+    if (name === "studyplan") renderStudyPlanPhoneV20();
+    if (name === "subjectreview") initSubjectReviewPhoneV20();
+    if (name === "memorycheck") renderMemoryCheckListPhoneV20();
+    if (name === "home") updateHomeMemoryDueV20();
+  } catch (e) {}
+};
+$("home-goto-studyplan").addEventListener("click", () => showView("studyplan"));
+$("home-goto-subjectreview").addEventListener("click", () => showView("subjectreview"));
+$("home-goto-memorycheck").addEventListener("click", () => showView("memorycheck"));
+$("studyplan-back-home").addEventListener("click", () => { renderHome(); showView("home"); });
+$("sr-back-home").addEventListener("click", () => { renderHome(); showView("home"); });
+$("mc-back-home").addEventListener("click", () => { renderHome(); showView("home"); });
+</script>
+
+<script>
+"use strict";
+/* ============================================================
+   v2.6: PC版 v0.9.22（追加機能 第1弾・第2弾）への対応
+   - 第1弾-1 弱点ドリル自動作成（間違えた問題＋正答率が低いテーマ）
+   - 第1弾-2 科目別進み具合の円グラフ（ホーム）
+   - 第1弾-3 試験までの日数と「あと何テーマか」（ホーム）
+   - 第1弾-4 「今日はここまで」宣言カード（端末ローカル）
+   - 第2弾-5 テーマ確認テスト（3問）（テーマ一覧の「確認3問」ボタン）
+   - 第2弾-6 勉強した時間帯のグラフ（記録・統計）
+   - 第2弾-7 用語カード「あいまい」マーク（端末ローカル・renderTermCards 側）
+   - 第2弾-8 目次チェック表示（テーマ一覧・renderThemes 側）
+   宣言・あいまい・手動チェックは端末ローカル保存で同期対象外
+   （PC版の report_memory_checks と同じ扱い）。
+   ============================================================ */
+const VAGUE_KEY_V26 = "ssai_m_vague_v26";
+const THEME_CHECK_KEY_V26 = "ssai_m_theme_checks_v26";
+const FINISH_KEY_V26 = "ssai_m_finish_v26";
+function _loadJsonV26(key) {
+  try { return JSON.parse(localStorage.getItem(key) || "{}") || {}; } catch (e) { return {}; }
+}
+function _saveJsonV26(key, obj) {
+  try { localStorage.setItem(key, JSON.stringify(obj)); } catch (e) {}
+}
+function vagueLoadV26() { return _loadJsonV26(VAGUE_KEY_V26); }
+function vagueSaveV26(m) { _saveJsonV26(VAGUE_KEY_V26, m); }
+function themeCheckLoadV26() { return _loadJsonV26(THEME_CHECK_KEY_V26); }
+function themeCheckSaveV26(m) { _saveJsonV26(THEME_CHECK_KEY_V26, m); }
+
+if (!VIEWS.includes("weakdrill")) VIEWS.push("weakdrill");
+
+/* ---------- 第1弾-3・第1弾-2・第1弾-4: ホームの追加表示 ---------- */
+function reportProgV26(r) {
+  const topics = r._topics || r.topics || [];
+  if (!topics.length) return r.progress || 0;
+  const ps = topics.map((tp) => topicProgress(r.subject, tp));
+  return Math.round(ps.reduce((a, x) => a + x, 0) / ps.length);
+}
+function donutSvgV26(pct, understood, total) {
+  const r = 26, c = 2 * Math.PI * r;
+  const p = Math.max(0, Math.min(100, pct || 0));
+  const off = c * (1 - p / 100);
+  return "<svg width='76' height='76' viewBox='0 0 76 76' role='img' aria-label='進み具合 " + p + "%'>" +
+    "<circle cx='38' cy='38' r='" + r + "' fill='none' stroke='#e5e7eb' stroke-width='9'></circle>" +
+    "<circle cx='38' cy='38' r='" + r + "' fill='none' stroke='#4f7cff' stroke-width='9' stroke-linecap='round'" +
+    " stroke-dasharray='" + c.toFixed(1) + "' stroke-dashoffset='" + off.toFixed(1) + "' transform='rotate(-90 38 38)'></circle>" +
+    "<text x='38' y='36' text-anchor='middle' font-size='15' font-weight='bold' fill='currentColor'>" + p + "%</text>" +
+    "<text x='38' y='52' text-anchor='middle' font-size='10' fill='currentColor'>" + understood + "/" + total + "</text></svg>";
+}
+function renderHomeExtrasV26() {
+  if (!DB.loaded) return;
+  // 第1弾-3: 試験までの日数と「あと何テーマか」
+  const cd = $("home-countdown-v26");
+  if (cd) {
+    const plan = computePlanMobile();
+    const THEMES = window.SSAI_THEMES;
+    let total = 0, done = 0, untouched = 0;
+    const stats = attemptStatsByTopic();
+    for (const s of THEMES.subjects) {
+      for (const tp of THEMES.topics[s] || []) {
+        total += 1;
+        if (topicProgress(s, tp) >= 100) done += 1;
+        if (!stats.has(s + "||" + tp)) untouched += 1;
+      }
+    }
+    const days = plan.daysLeft;
+    cd.innerHTML = "🏁 試験（" + esc(String(plan.mainDate).replace(/-/g, "/")) +
+      (plan.provisional ? "・仮の日程" : "") + "）まで " +
+      (days > 0 ? "<strong>あと " + days + "日</strong>" : days === 0 ? "<strong>今日</strong>" : "<strong>過ぎたよ</strong>") +
+      " ｜ テーマは <strong>あと " + (total - done) + "</strong>（全" + total + "のうち終わったのは " + done +
+      "・未着手 " + untouched + "）";
+  }
+  // 第1弾-2: 科目別進み具合の円グラフ（レポート理解）
+  const dn = $("home-donuts-v26");
+  if (dn) {
+    const THEMES = window.SSAI_THEMES;
+    const by = {};
+    (DB.reports || []).forEach((r) => {
+      const e = by[r.subject] || (by[r.subject] = { total: 0, understood: 0 });
+      e.total += 1;
+      if (reportProgV26(r) >= 100 || Number(r._understood) === 1) e.understood += 1;
+    });
+    dn.innerHTML = THEMES.subjects.map((s) => {
+      const e = by[s] || { total: 0, understood: 0 };
+      const pct = e.total ? Math.round(100 * e.understood / e.total) : 0;
+      return "<div class='donut-item-v26'>" + donutSvgV26(pct, e.understood, e.total) +
+        "<div class='donut-subject-v26'>" + esc(s) + "</div></div>";
+    }).join("");
+  }
+  renderFinishV26();
+}
+/* 第1弾-4: 「今日はここまで」宣言（端末ローカル） */
+function renderFinishV26() {
+  const el = $("home-finish-v26");
+  if (!el) return;
+  const marks = _loadJsonV26(FINISH_KEY_V26);
+  const today = todayJST();
+  const totalDays = Object.keys(marks).length;
+  const mine = marks[today];
+  if (mine) {
+    const t = mine.at ? new Date(mine.at * 1000) : null;
+    el.innerHTML = "<p><strong>✅ 今日はここまで宣言済み</strong>" +
+      (t ? "（" + t.getHours() + "時" + String(t.getMinutes()).padStart(2, "0") + "分に宣言）" : "") + "</p>" +
+      (mine.note ? "<p>ひとこと：" + esc(mine.note) + "</p>" : "") +
+      "<p class='muted'>宣言した日は合計 " + totalDays + " 日だよ。</p>" +
+      "<button class='secondary' id='finish-cancel-v26' style='width:100%'>宣言を取り消す</button>";
+    $("finish-cancel-v26").addEventListener("click", () => {
+      const m = _loadJsonV26(FINISH_KEY_V26);
+      delete m[todayJST()];
+      _saveJsonV26(FINISH_KEY_V26, m);
+      renderFinishV26();
+    });
+  } else {
+    el.innerHTML = "<input type='text' id='finish-note-v26' placeholder='ひとこと（空でも大丈夫）' maxlength='200' style='width:100%'>" +
+      "<button class='primary' id='finish-declare-v26' style='width:100%;margin-top:.5em'>🏁 今日はここまでと宣言する</button>" +
+      (totalDays ? "<p class='muted'>宣言した日は合計 " + totalDays + " 日だよ。</p>" : "");
+    $("finish-declare-v26").addEventListener("click", () => {
+      const m = _loadJsonV26(FINISH_KEY_V26);
+      m[todayJST()] = { note: ($("finish-note-v26").value || "").trim(), at: nowSec() };
+      _saveJsonV26(FINISH_KEY_V26, m);
+      toast("🏁 今日はここまで。お疲れさま！");
+      renderFinishV26();
+    });
+  }
+}
+const _renderHomeV26 = renderHome;
+renderHome = function () {
+  _renderHomeV26();
+  try { renderHomeExtrasV26(); } catch (e) {}
+};
+
+/* ---------- 第2弾-6: 勉強した時間帯のグラフ ---------- */
+function renderHourStatsV26() {
+  const el = $("stats-hours-v26");
+  if (!el) return;
+  const totals = new Array(24).fill(0);
+  DB.attempts.forEach((a) => {
+    const ts = a.row.created_at || 0;
+    if (!ts) return;
+    totals[new Date((ts + 9 * 3600) * 1000).getUTCHours()] += 1;
+  });
+  const total = totals.reduce((x, y) => x + y, 0);
+  if (!total) { el.innerHTML = "<p class='muted'>まだ学習履歴はありません。</p>"; return; }
+  const max = Math.max(1, ...totals);
+  el.innerHTML = totals.map((n, h) =>
+    "<div class='hour-row-v26'><span class='hour-label-v26'>" + h + "時</span>" +
+    "<div class='hour-track-v26'><div class='hour-fill-v26' style='width:" + Math.round(n / max * 100) + "%'></div></div>" +
+    "<span class='muted'>" + n + "問</span></div>").join("");
+}
+const _renderStatsV26 = renderStats;
+renderStats = function () {
+  _renderStatsV26();
+  try { renderHourStatsV26(); } catch (e) {}
+};
+
+/* ---------- 第1弾-1: 弱点ドリル自動作成 ---------- */
+function weakDrillDataV26() {
+  const latest = new Map();
+  DB.attempts.forEach((a) => latest.set(normalizeText(a.row.question), a.row));
+  const seedsByText = new Map();
+  visibleSeeds().forEach((s) => {
+    const k = normalizeText(s.question);
+    if (!seedsByText.has(k)) seedsByText.set(k, s);
+  });
+  const wrongSeeds = [];
+  latest.forEach((row, key) => {
+    if (!row.is_correct && seedsByText.has(key)) wrongSeeds.push(seedsByText.get(key));
+  });
+  const stats = attemptStatsByTopic();
+  let weak = [];
+  stats.forEach((v, k) => {
+    const acc = v.total ? v.correct / v.total : 1;
+    if (v.total >= 3 && acc < 0.6) weak.push({ key: k, total: v.total, correct: v.correct, acc: acc });
+  });
+  if (!weak.length) {
+    stats.forEach((v, k) => {
+      const acc = v.total ? v.correct / v.total : 1;
+      if (v.total >= 2 && acc < 0.8) weak.push({ key: k, total: v.total, correct: v.correct, acc: acc });
+    });
+  }
+  weak.sort((a, b) => a.acc - b.acc);
+  return { wrongSeeds: wrongSeeds, weak: weak };
+}
+function renderWeakDrillV26() {
+  const el = $("wd-info-v26");
+  if (!el) return;
+  const d = weakDrillDataV26();
+  if (!d.wrongSeeds.length && !d.weak.length) {
+    el.innerHTML = "<p>弱点ドリルの材料がまだ無いよ。問題を解くと、間違えた問題や正答率が低いテーマが自動で集まるよ。</p>";
+    $("wd-start-v26").disabled = true;
+    return;
+  }
+  $("wd-start-v26").disabled = false;
+  let html = "";
+  if (d.wrongSeeds.length) html += "<p>間違えたままの問題：<strong>" + d.wrongSeeds.length + "問</strong></p>";
+  if (d.weak.length) {
+    html += "<p>正答率が低いテーマ：</p><ul>" + d.weak.slice(0, 8).map((w) => {
+      const parts = w.key.split("||");
+      return "<li>" + esc(parts[0]) + "／" + esc(parts[1] || "") + "（正答率 " + Math.round(w.acc * 100) + "%・" + w.total + "問）</li>";
+    }).join("") + "</ul>";
+  }
+  el.innerHTML = html;
+}
+function startWeakDrillV26() {
+  const d = weakDrillDataV26();
+  const items = shuffleArr(d.wrongSeeds).slice(0, 10).map(prepareFromSeed);
+  if (items.length < 10) {
+    const used = new Set(items.map((i) => i.stock_id));
+    for (const w of d.weak) {
+      if (items.length >= 10) break;
+      const parts = w.key.split("||");
+      const pool = shuffleArr(visibleSeeds().filter((x) =>
+        x.subject === parts[0] && x.topic === parts[1] && !used.has(x.id)));
+      for (const sd of pool) {
+        if (items.length >= 10) break;
+        used.add(sd.id);
+        items.push(prepareFromSeed(sd));
+      }
+    }
+  }
+  if (!items.length) { toast("出題できる問題が見つからなかったよ"); return; }
+  beginSession("weakdrill", items, "弱点ドリル");
+}
+
+/* ---------- 第2弾-5: テーマ確認テスト（3問） ---------- */
+function startThemeCheckV26(subject, topic) {
+  const pool = shuffleArr(visibleSeeds().filter((s) => s.subject === subject && s.topic === topic));
+  if (!pool.length) { toast("このテーマの問題が見つからなかったよ"); return; }
+  beginSession("themecheck", pool.slice(0, 3).map(prepareFromSeed),
+    "確認テスト｜" + subject + "｜" + topic);
+}
+
+/* ---- 画面遷移フックとボタン ---- */
+const _showViewV26 = showView;
+showView = function (name) {
+  _showViewV26(name);
+  try {
+    if (name === "weakdrill") renderWeakDrillV26();
+  } catch (e) {}
+};
+$("home-goto-weakdrill").addEventListener("click", () => showView("weakdrill"));
+$("wd-back-home").addEventListener("click", () => { renderHome(); showView("home"); });
+$("wd-start-v26").addEventListener("click", startWeakDrillV26);
+const _vagueOnlyEl = $("tc-vague-only-v26");
+if (_vagueOnlyEl) _vagueOnlyEl.addEventListener("change", () => renderTermCards());
 </script>
 
 </body>
