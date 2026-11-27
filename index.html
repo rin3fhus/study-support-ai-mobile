@@ -174,10 +174,18 @@
 
   <!-- ホーム：今日やる学習 -->
   <section id="view-home" hidden>
+    <!-- v2.10: 機能検索（ホームの上の方だけに置く） -->
+    <div class="panel">
+      <h2>🔍 機能をさがす</h2>
+      <input type="text" id="feature-search-input-v210" placeholder="例：弱点、間違い、暗記、カレンダー" autocomplete="off">
+      <div id="feature-search-results-v210"></div>
+    </div>
     <div class="panel">
       <h2>📝 レポート理解と暗記</h2>
       <p class="muted">目標は「レポートを理解し、暗記すること」だよ。</p>
       <p id="home-goal-stats"></p>
+      <!-- v2.11: 次のレポートのステップカード（renderNextReportCardV211 が描く） -->
+      <div id="home-next-report-v211"></div>
       <div class="row">
         <button class="primary grow" id="home-goto-rq">✏️ レポートの問題を解く</button>
         <button class="secondary grow" id="home-goto-rg2">📖 理解ガイド</button>
@@ -295,6 +303,12 @@
       <div class="row" style="margin-top:.8em">
         <button class="secondary grow" id="studyplan-back-home">🏠 ホームへ</button>
       </div>
+    </div>
+    <!-- v2.10: レポート一覧（学習プランの一覧と同じ内容・色分け。進み具合の下に置く） -->
+    <div class="panel">
+      <h2>レポート一覧</h2>
+      <p class="muted">色の意味：<span class="v27-badge st-untouched">手つかず</span> 進み具合0% ／ <span class="v27-badge st-doing">途中</span> 進み具合1%以上 ／ <span class="v27-badge st-done">完了</span> 進み具合100%</p>
+      <div id="studyplan-reports-v210"></div>
     </div>
   </section>
 
@@ -823,6 +837,28 @@
 <script>
 "use strict";
 /* ============================================================
+   学習サポートAI（スマホ版）v2.11（ステップ案内型・第1段階）
+   v2.11: 改善案3「ステップ案内型」の第1段階。ホームの「レポート理解と
+   暗記」パネルに「次のレポート」のステップカードを追加した。対象は
+   次に進める未理解レポート1件で、ステップ1：ガイドを読む／ステップ2：
+   範囲の問題を解く／ステップ3：理解したを付ける、と今のステップと
+   主ボタン1つだけを出す。ステップ判定は既存データ（attempts の記録と
+   レポート行の _understood）だけから行い、判定できないものは無理に
+   判定しない。あわせて、学習プラン／学習計画のレポート一覧の行を
+   タップすると、そのレポートのガイド（無ければ問題）へ進めるように
+   した。ガイド詳細にも「理解した」の付け外しボタンを追加した。
+   「理解した」の書き込みは、レポート行の _understood を変えて既存の
+   saveRow で送る（PC版 v0.9.21 の設計どおり、行の状態変更として
+   新しい方を優先で届く。同期の安全確認は v2.11 の作業記録に記載）。
+   学習サポートAI（スマホ版）v2.10（学習計画へのレポート一覧追加＋機能検索）
+   v2.10: 「学習計画」の画面にもレポート一覧を追加した（「学習プラン」の
+   一覧と同じ内容で、v2.9 の色分け＝完了は緑／途中は黄色／手つかずは
+   グレーと、色の意味の凡例・状態バッジつき。一覧の描画は学習プランと
+   共通の renderReportListIntoV210 にまとめた）。
+   あわせて、ホーム画面の上の方に「機能をさがす」検索欄を追加した。
+   言葉を入れると、名前・説明・キーワードが合う機能が一覧で出て、
+   押すとその画面へ移動する。合う機能が無いときはその旨を表示する。
+   既存の画面・機能・データの変更はなし（表示の追加のみ）。
    学習サポートAI（スマホ版）v2.9（月別カレンダーの見づらさ修正＋学習計画の色分け）
    v2.9: 「終わったテーマの月別カレンダー」で、同じ日に何件も終わった日に
    マスが縦に伸びてテーマ名が数文字ずつ折り返されて読めなくなる問題の修正。
@@ -2972,42 +3008,8 @@ function renderPlan() {
     });
     wk.innerHTML = t + "</table>";
   }
-  const repEl = $("plan-reports");
-  if (!DB.reports.length) {
-    repEl.innerHTML = "<p class='muted'>レポートはまだ登録されていないよ。</p>";
-  } else {
-    const today = todayJST();
-    const sorted = DB.reports.slice().sort((a, b) => {
-      const ka = a.submitted ? 2 : (a.deadline ? 0 : 1);
-      const kb = b.submitted ? 2 : (b.deadline ? 0 : 1);
-      return ka - kb || String(a.deadline || "9999").localeCompare(String(b.deadline || "9999"));
-    });
-    repEl.innerHTML = "";
-    sorted.forEach((r) => {
-      const topics = r._topics || [];
-      const progresses = topics.map((tp) => topicProgress(r.subject, tp));
-      const prog = topics.length
-        ? Math.round(progresses.reduce((a, x) => a + x, 0) / topics.length) : 0;
-      const done = progresses.filter((x) => x >= 100).length;
-      const div = document.createElement("div");
-      // v2.9: テーマ一覧と同じ考え方の色分け（レポート範囲テーマの平均の進み具合で判定）
-      const stateClsV29 = prog >= 100 ? " theme-status-done-v27" : prog >= 1 ? " theme-status-doing-v27" : " theme-status-untouched-v27";
-      const stateBadgeV29 = prog >= 100 ? "<span class='v27-badge st-done'>完了</span>"
-        : prog >= 1 ? "<span class='v27-badge st-doing'>途中</span>"
-        : "<span class='v27-badge st-untouched'>手つかず</span>";
-      div.className = "item" + stateClsV29;
-      let detail = "範囲 " + topics.length + " テーマ中 " + done + " テーマ完了（進み具合 " + prog + "%）";
-      if (r.submitted) detail += "｜提出済み";
-      else if (r.deadline) {
-        const left = daysBetween(today, r.deadline);
-        detail += "｜期限 " + r.deadline + "（" +
-          (left < 0 ? "期限を過ぎています" : left === 0 ? "今日まで" : "あと" + left + "日") + "）";
-      }
-      div.innerHTML = "<div class='body'><strong>" + esc(r.name || "") + "（" + esc(r.subject) +
-        "）</strong> " + stateBadgeV29 + "<br><span class='muted'>" + esc(detail) + "</span></div>";
-      repEl.appendChild(div);
-    });
-  }
+  // v2.10: レポート一覧の描画は学習計画画面と共通化した（renderReportListIntoV210）
+  renderReportListIntoV210($("plan-reports"));
 }
 
 /* ---------- ノート・お気に入り・あとで解く ---------- */
@@ -4649,6 +4651,346 @@ function shiftTcalV27(delta) {
 }
 $("tcal-prev-v27").addEventListener("click", () => shiftTcalV27(-1));
 $("tcal-next-v27").addEventListener("click", () => shiftTcalV27(1));
+</script>
+
+<script>
+"use strict";
+/* ============================================================
+   v2.10: 学習計画へのレポート一覧追加＋機能検索
+   - レポート一覧の描画を renderReportListIntoV210 に共通化し、
+     学習プラン（#plan-reports）と学習計画（#studyplan-reports-v210）の
+     両方で、同じ内容・同じ色分けの一覧を出す
+   - ホームの上の方に機能検索（#feature-search-input-v210）を追加。
+     言葉を入れると合う機能が一覧で出て、押すとその画面へ移動する
+   ============================================================ */
+function renderReportListIntoV210(repEl) {
+  if (!repEl) return;
+  if (!DB.reports.length) {
+    repEl.innerHTML = "<p class='muted'>レポートはまだ登録されていないよ。</p>";
+  } else {
+    const today = todayJST();
+    const sorted = DB.reports.slice().sort((a, b) => {
+      const ka = a.submitted ? 2 : (a.deadline ? 0 : 1);
+      const kb = b.submitted ? 2 : (b.deadline ? 0 : 1);
+      return ka - kb || String(a.deadline || "9999").localeCompare(String(b.deadline || "9999"));
+    });
+    repEl.innerHTML = "";
+    sorted.forEach((r) => {
+      const topics = r._topics || [];
+      const progresses = topics.map((tp) => topicProgress(r.subject, tp));
+      const prog = topics.length
+        ? Math.round(progresses.reduce((a, x) => a + x, 0) / topics.length) : 0;
+      const done = progresses.filter((x) => x >= 100).length;
+      const div = document.createElement("div");
+      // v2.9: テーマ一覧と同じ考え方の色分け（レポート範囲テーマの平均の進み具合で判定）
+      const stateClsV29 = prog >= 100 ? " theme-status-done-v27" : prog >= 1 ? " theme-status-doing-v27" : " theme-status-untouched-v27";
+      const stateBadgeV29 = prog >= 100 ? "<span class='v27-badge st-done'>完了</span>"
+        : prog >= 1 ? "<span class='v27-badge st-doing'>途中</span>"
+        : "<span class='v27-badge st-untouched'>手つかず</span>";
+      div.className = "item" + stateClsV29;
+      let detail = "範囲 " + topics.length + " テーマ中 " + done + " テーマ完了（進み具合 " + prog + "%）";
+      if (r.submitted) detail += "｜提出済み";
+      else if (r.deadline) {
+        const left = daysBetween(today, r.deadline);
+        detail += "｜期限 " + r.deadline + "（" +
+          (left < 0 ? "期限を過ぎています" : left === 0 ? "今日まで" : "あと" + left + "日") + "）";
+      }
+      div.innerHTML = "<div class='body'><strong>" + esc(r.name || "") + "（" + esc(r.subject) +
+        "）</strong> " + stateBadgeV29 + "<br><span class='muted'>" + esc(detail) + "</span></div>";
+      // v2.11: 行をタップすると、そのレポートのガイド（無ければ問題）へ進める
+      const noV211 = reportNoOfV211(r);
+      const guideV211 = findGuideV211(r.subject, noV211);
+      const hasSetV211 = noV211 != null && (window.SSAI_REPORT_QUESTIONS || [])
+        .some((st) => st.subject === r.subject && Number(st.report_no) === noV211);
+      if (guideV211 || hasSetV211) {
+        div.style.cursor = "pointer";
+        const cue = document.createElement("span");
+        cue.className = "muted";
+        cue.textContent = guideV211 ? "タップでガイドを開く ›" : "タップで問題を開く ›";
+        const bodyEl = div.querySelector(".body");
+        bodyEl.appendChild(document.createElement("br"));
+        bodyEl.appendChild(cue);
+        div.addEventListener("click", () => {
+          if (guideV211) openReportGuideV211(r.subject, noV211);
+          else openRqSet(r.subject, noV211);
+        });
+      }
+      repEl.appendChild(div);
+    });
+  }
+}
+
+// 学習計画を開くたびに、レポート一覧も描く（元の描画はそのまま使う）
+const _renderStudyPlanPhoneV20v210 = renderStudyPlanPhoneV20;
+renderStudyPlanPhoneV20 = function () {
+  _renderStudyPlanPhoneV20v210();
+  renderReportListIntoV210($("studyplan-reports-v210"));
+};
+
+/* ---------- 機能検索 ---------- */
+const FEATURES_V210 = [
+  { name: "レポートの問題を解く", desc: "学校のレポートの実物の問題を解く", kw: "レポート 問題 解く 実物 本物 学校", view: "rq" },
+  { name: "レポート理解ガイド", desc: "レポートの問題ごとに、答えのポイントを見る", kw: "レポート 理解 ガイド 答え ポイント 教科書", view: "reportguide" },
+  { name: "レポートの解き直し予定", desc: "ホームの中。理解したレポートを解き直す予定", kw: "レポート 解き直し 予定 復習", view: "home", target: "report-review-panel" },
+  { name: "問題を解く（テーマ一覧）", desc: "科目とテーマを選んで問題を解く", kw: "問題 テーマ 解く 科目 練習 色分け", view: "themes" },
+  { name: "予習ガイド", desc: "テーマ一覧の「予習」から、要点を読んでから問題を始める", kw: "予習 ガイド 要点 読む テーマ", view: "themes" },
+  { name: "テーマ確認テスト（確認3問）", desc: "テーマ一覧の各テーマにある「確認3問」ボタンから始める", kw: "確認 テスト 3問 テーマ 終わった", view: "themes" },
+  { name: "ドリル（形式ドリル・テンポ復習）", desc: "形式だけのドリルや、制限時間つきのテンポ復習", kw: "ドリル 形式 テンポ 復習 穴埋め 誤文訂正 抜き出し 記述 順序 ミックス", view: "themes" },
+  { name: "弱点ドリル", desc: "間違えた問題と正答率が低いテーマを自動で集めるドリル", kw: "弱点 ドリル 苦手 自動 集める", view: "weakdrill" },
+  { name: "間違いノート", desc: "間違えた問題の一覧と、今日の間違い直し", kw: "間違い ノート 直し 復習 間違えた", view: "wrong" },
+  { name: "用語カード", desc: "用語の意味をカードで見る・覚える", kw: "用語 カード 意味 覚える あいまい", view: "terms" },
+  { name: "言葉クイズ", desc: "用語の意味と名前を当てるクイズ", kw: "言葉 クイズ 用語 意味", view: "terms", tab: "quiz" },
+  { name: "混同ペア", desc: "間違えやすい用語の組を比べる・クイズで確認する", kw: "混同 ペア 比べる 間違えやすい 用語", view: "terms", tab: "pairs" },
+  { name: "要点まとめ", desc: "テーマごとの要点カードと画像", kw: "要点 まとめ カード 画像 イラスト", view: "yoten" },
+  { name: "記録・統計", desc: "解いた問題数・正答率・科目ごとの進み具合", kw: "記録 統計 進み具合 正答率 解いた数", view: "stats" },
+  { name: "終わったテーマの月別カレンダー", desc: "記録・統計の中。終わったテーマを月ごとに見る", kw: "カレンダー 月別 終わった テーマ 振り返り", view: "stats", target: "tcal-grid-v27" },
+  { name: "勉強した時間帯のグラフ", desc: "記録・統計の中。何時ごろ解いたかを見る", kw: "時間帯 グラフ 何時 勉強", view: "stats", target: "stats-hours-v26" },
+  { name: "模擬試験", desc: "時間を計ってまとめて解く、本番形式の試験", kw: "模擬 試験 テスト 本番 時間 採点", view: "exam" },
+  { name: "科目ごとの弱点（模擬試験）", desc: "模擬試験の記録から、科目ごとの正答率と弱いテーマを見る", kw: "弱点 科目 模擬試験 正答率 苦手", view: "exam", target: "exam-weakness-v27" },
+  { name: "学習プラン", desc: "週ごとの計画の目安と、レポートの一覧（色分けつき）", kw: "プラン 計画 週 レポート 一覧 期限 色", view: "plan" },
+  { name: "学習計画", desc: "進み具合・アプリの使い分け・おすすめの1週間・レポート一覧", kw: "計画 進み具合 ペース 使い分け おすすめ 1週間 レポート 一覧", view: "studyplan" },
+  { name: "科目総復習", desc: "科目ごとに、レポート・要点・用語・間違えた問題を復習する", kw: "総復習 科目 復習 まとめ", view: "subjectreview" },
+  { name: "暗記チェック", desc: "解けたレポートの問題を、間をあけて覚えているか確認する", kw: "暗記 チェック 覚えた 確認 復習", view: "memorycheck" },
+  { name: "ノート・お気に入り・あとで解く", desc: "メモを書く・お気に入りと「あとで解く」を見る", kw: "ノート メモ お気に入り あとで解く 疑問", view: "notes" },
+  { name: "今日の1行振り返り", desc: "ホームの中。1日の終わりに1行だけ書く振り返り", kw: "振り返り 1行 今日 日記 終わり", view: "home", target: "reflection-input-v27" },
+  { name: "今日はここまで宣言", desc: "ホームの中。今日の勉強の区切りを宣言するカード", kw: "宣言 今日はここまで 区切り 終わり", view: "home", target: "home-finish-v26" },
+  { name: "ミミからのおすすめ", desc: "ホームの中。ミミが今日のテーマを1つすすめる", kw: "ミミ おすすめ テーマ すすめる", view: "home", target: "mimi-rec" },
+  { name: "試験までの日数と円グラフ", desc: "ホームの中。試験まであと何日かと、科目ごとの進み具合", kw: "試験 日数 あと何日 円グラフ 進み具合 カウントダウン", view: "home", target: "home-donuts-v26" },
+  { name: "設定（文字の大きさ・フリガナ）", desc: "文字の大きさとフリガナの設定", kw: "設定 文字 大きさ フリガナ ルビ", view: "settings" },
+  { name: "復習の間隔の目安", desc: "設定の中。復習と暗記チェックの間隔（短め／ふつう／長め）", kw: "復習 間隔 短め ふつう 長め 設定", view: "settings", target: "review-span-seg-v27" },
+  { name: "同期（今すぐ読み直す）", desc: "設定の中。パソコン版との記録を読み直す", kw: "同期 読み直す アカウント パソコン 連携 記録", view: "settings", target: "sync-btn" },
+  { name: "ストック生成について", desc: "問題のストック生成はパソコン版の機能。押すと説明が出る", kw: "ストック 生成 問題 作る 増やす パソコン", view: "stock" }
+];
+function featureMatchV210(f, tokens) {
+  const hay = f.name + " " + f.desc + " " + f.kw;
+  return tokens.every((t) => hay.includes(t));
+}
+function renderFeatureSearchV210(q) {
+  const box = $("feature-search-results-v210");
+  if (!box) return;
+  const tokens = String(q || "").trim().split(/[\s　]+/).filter(Boolean);
+  if (!tokens.length) { box.innerHTML = ""; return; }
+  const hits = FEATURES_V210.filter((f) => featureMatchV210(f, tokens));
+  if (!hits.length) {
+    box.innerHTML = "<p class='muted'>「" + esc(tokens.join(" ")) +
+      "」に合う機能は見つからなかったよ。別の言葉で試してみてね。</p>";
+    return;
+  }
+  box.innerHTML = "";
+  hits.forEach((f) => {
+    const b = document.createElement("button");
+    b.className = "secondary feature-hit-v210";
+    b.style.cssText = "width:100%;text-align:left;margin:.25em 0";
+    b.innerHTML = "<strong>" + esc(f.name) + "</strong><br><span class='muted'>" + esc(f.desc) + "</span>";
+    b.addEventListener("click", () => featureOpenV210(f));
+    box.appendChild(b);
+  });
+}
+function featureOpenV210(f) {
+  if (f.view === "stock") {
+    toast("ストック生成はパソコン版の機能だよ。生成した問題はスマホ版の問題にも出てくるよ（「生成した問題」の印つき）", true);
+    return;
+  }
+  if (f.view === "rq") renderRqList();
+  else if (f.view === "reportguide") { renderReportGuideSubjects(); showView("reportguide"); }
+  else if (f.view === "plan") { renderPlan(); showView("plan"); }
+  else if (f.view === "exam") { renderExamHistory(); showView("exam"); }
+  else if (f.view === "notes") { renderNotes(); showView("notes"); }
+  else showView(f.view);
+  if (f.tab === "quiz") selectTermsTab("quiz");
+  if (f.tab === "pairs") { selectTermsTab("pairs"); renderPairs(); }
+  if (f.target) {
+    const t = document.getElementById(f.target);
+    if (t && t.scrollIntoView) t.scrollIntoView();
+  }
+  const inp = $("feature-search-input-v210");
+  if (inp) inp.value = "";
+  renderFeatureSearchV210("");
+}
+(function () {
+  const inp = $("feature-search-input-v210");
+  if (inp) inp.addEventListener("input", (e) => renderFeatureSearchV210(e.target.value));
+})();
+
+/* ============================================================
+   v2.11: ステップ案内型（第1段階）
+   - ホームの「レポート理解と暗記」パネルに「次のレポート」の
+     ステップカードを出す（対象1件・今のステップ・主ボタン1つ）
+   - レポート一覧の行タップでガイドへ進める（renderReportListIntoV210 側）
+   - ガイド詳細とステップカードから「理解した」を付け外しできる
+   「理解した」の保存は、レポート行の _understood を書き換えて既存の
+   saveRow("reports", key, row) で送る。PC版 v0.9.21 の設計では、
+   マークの付け外しはレポート行の状態変更として扱われ、行ごとの
+   「新しい方を優先」で相手に届く（PC側 _apply_remote_row が _origin に
+   関わらず _understood を反映することを確認済み）。行の他のフィールド
+   （_topics 含む）は受け取った実物をそのまま書き戻すので壊れない。
+   ============================================================ */
+/* レポート行からレポート番号を取る。行に report_no が無い場合は、
+   PC版と同じく名前（例「日本史レポート1」）から読み取る。 */
+function reportNoOfV211(r) {
+  if (r && r.report_no != null && !isNaN(Number(r.report_no))) return Number(r.report_no);
+  const m = String((r && r.name) || "").match(/レポート\s*(\d+)/);
+  return m ? Number(m[1]) : null;
+}
+/* レポート一覧（v2.9）と同じ計算で、範囲テーマの平均の進み具合を出す */
+function reportProgOfV211(r) {
+  const topics = (r && r._topics) || [];
+  if (!topics.length) return 0;
+  const ps = topics.map((tp) => topicProgress(r.subject, tp));
+  return Math.round(ps.reduce((a, x) => a + x, 0) / ps.length);
+}
+/* 「理解した」扱いかどうか（一覧・学習計画と同じ考え方） */
+function reportDoneV211(r) {
+  return reportProgOfV211(r) >= 100 || Number(r._understood) === 1;
+}
+function findGuideV211(subject, no) {
+  if (no == null) return null;
+  return (window.SSAI_REPORT_GUIDES || [])
+    .find((g) => g.subject === subject && Number(g.report_no) === no) || null;
+}
+function openReportGuideV211(subject, no) {
+  const g = findGuideV211(subject, no);
+  renderReportGuideSubjects();
+  showView("reportguide");
+  if (g) renderReportGuideDetail(g);
+}
+/* 次に進める未理解レポート1件（科目は教科書の並び順、科目内は番号順） */
+function nextReportEntryV211() {
+  const order = Object.keys((window.SSAI_THEMES && window.SSAI_THEMES.topics) || {});
+  const entries = (DB.reportList || []).slice();
+  entries.sort((a, b) => {
+    const sa = order.indexOf(a.row.subject);
+    const sb = order.indexOf(b.row.subject);
+    const oa = sa < 0 ? 999 : sa;
+    const ob = sb < 0 ? 999 : sb;
+    if (oa !== ob) return oa - ob;
+    const na = reportNoOfV211(a.row);
+    const nb = reportNoOfV211(b.row);
+    return (na == null ? 999 : na) - (nb == null ? 999 : nb);
+  });
+  return entries.find((e) => !reportDoneV211(e.row)) || null;
+}
+/* そのレポートの問題を解いた記録があるか（レポート問題の attempts は
+   topic が「レポート{番号}」、範囲の問題は _topics のテーマ名で残る） */
+function reportAttemptsExistV211(r) {
+  const no = reportNoOfV211(r);
+  const topics = r._topics || [];
+  return DB.attempts.some((a) => a.row.subject === r.subject &&
+    (topics.includes(a.row.topic) || (no != null && a.row.topic === "レポート" + no)));
+}
+/* 「理解した」の付け外し。行全体（_topics 含む実物）の _understood だけを
+   書き換えて、既存の saveRow で送る（オフライン時は端末に控えて再送）。 */
+async function setReportUnderstoodV211(key, on) {
+  const e = (DB.reportList || []).find((x) => x.key === key);
+  if (!e) return false;
+  const newRow = Object.assign({}, e.row, { _understood: on ? 1 : 0 });
+  const ok = await saveRow("reports", key, newRow);
+  if (ok) toast(on ? "「理解した」を記録したよ。お疲れさま" : "「理解した」を取り消したよ");
+  else toast("端末に控えたよ。つながったら送るね", true);
+  return ok;
+}
+
+function renderNextReportCardV211() {
+  const box = $("home-next-report-v211");
+  if (!box) return;
+  box.innerHTML = "";
+  if (!DB.reports.length) return;
+  const e = nextReportEntryV211();
+  if (!e) {
+    const p = document.createElement("p");
+    p.innerHTML = "<strong>次のレポート</strong><br>全部のレポートを「理解した」にできたよ。お疲れさま！";
+    box.appendChild(p);
+    return;
+  }
+  const r = e.row;
+  const no = reportNoOfV211(r);
+  const guide = findGuideV211(r.subject, no);
+  const set = no != null && (window.SSAI_REPORT_QUESTIONS || [])
+    .some((st) => st.subject === r.subject && Number(st.report_no) === no);
+  const solved = reportAttemptsExistV211(r);
+  // 今のステップ：解いた記録があれば3、ガイドがあれば1、
+  // ガイドが無いレポートは問題から始めるので2。ガイドを読んだかどうかは
+  // 記録が無いので判定しない（ステップ1は「済んだ」とは表示しない）。
+  const cur = solved ? 3 : (guide ? 1 : 2);
+  const card = document.createElement("div");
+  card.style.cssText = "border:1px solid var(--line);border-radius:10px;padding:.6em .8em;margin:.6em 0";
+  const title = document.createElement("div");
+  title.innerHTML = "<strong>次のレポート：" + esc(r.name || (r.subject + " レポート" + (no == null ? "" : no))) + "</strong>";
+  card.appendChild(title);
+  const stepLabels = ["ガイドを読む", "範囲の問題を解く", "理解したを付ける"];
+  stepLabels.forEach((label, i) => {
+    const n = i + 1;
+    const line = document.createElement("div");
+    let mark = "　";
+    if (n === 2 && solved) mark = "✓";
+    if (n === cur) line.innerHTML = "<strong>▶ ステップ" + n + "：" + label + "</strong>";
+    else if (mark === "✓") line.innerHTML = "<span style='color:var(--ok)'>✓</span> ステップ" + n + "：" + label;
+    else {
+      line.className = "muted";
+      line.textContent = "　ステップ" + n + "：" + label +
+        (n === 1 && !guide ? "（このレポートのガイドはまだないよ）" : "");
+    }
+    card.appendChild(line);
+  });
+  const btn = document.createElement("button");
+  btn.className = "primary";
+  btn.style.cssText = "width:100%;margin-top:.5em";
+  if (cur === 1) {
+    btn.textContent = "📖 ガイドを読む";
+    btn.addEventListener("click", () => openReportGuideV211(r.subject, no));
+  } else if (cur === 2 && set) {
+    btn.textContent = "✏️ このレポートの問題を解く";
+    btn.addEventListener("click", () => openRqSet(r.subject, no));
+  } else if (cur === 2 && (r._topics || []).length) {
+    btn.textContent = "📖 範囲の予習ガイドを読む";
+    btn.addEventListener("click", () => openGuide(r.subject, r._topics[0]));
+  } else if (cur === 3) {
+    btn.textContent = "✓ 理解したにする";
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      await setReportUnderstoodV211(e.key, true);
+      renderHome();
+    });
+  } else {
+    btn.hidden = true;
+    const note = document.createElement("p");
+    note.className = "muted";
+    note.textContent = "このレポートのガイドと問題は、まだ用意されていないよ。";
+    card.appendChild(note);
+  }
+  if (!btn.hidden) card.appendChild(btn);
+  box.appendChild(card);
+}
+
+/* ホームを開くたびにステップカードも描く（元の描画はそのまま使う） */
+const _renderHomeV211 = renderHome;
+renderHome = function () {
+  _renderHomeV211();
+  renderNextReportCardV211();
+};
+
+/* ガイド詳細に「理解した」の付け外しボタンを足す（元の描画はそのまま使う） */
+const _renderReportGuideDetailV211 = renderReportGuideDetail;
+renderReportGuideDetail = function (g) {
+  _renderReportGuideDetailV211(g);
+  const detail = $("rg-detail");
+  if (!detail) return;
+  const e = (DB.reportList || []).find((x) => x.row.subject === g.subject &&
+    reportNoOfV211(x.row) === Number(g.report_no));
+  if (!e) return;
+  const on = Number(e.row._understood) === 1;
+  const b = document.createElement("button");
+  b.className = on ? "secondary" : "primary";
+  b.style.cssText = "width:100%;margin-top:.8em";
+  b.textContent = on ? "✓ 理解した（取り消すときはタップ）" : "✓ 理解したにする";
+  b.addEventListener("click", async () => {
+    b.disabled = true;
+    await setReportUnderstoodV211(e.key, !on);
+    renderReportGuideDetail(g);
+    renderNextReportCardV211();
+  });
+  detail.appendChild(b);
+};
 </script>
 
 </body>
