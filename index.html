@@ -53,7 +53,9 @@
   .item .body{flex:1}
   .item .mark{font-size:1.15em;line-height:1.4}
   .badge{display:inline-block;background:var(--chip);border-radius:999px;
-    padding:.05em .6em;font-size:.8em;margin-right:.3em}
+    padding:.05em .6em;font-size:.8em;margin-right:.3em;white-space:nowrap}
+  /* v2.8: 一覧の行の中のボタンは、文字が縦に割れないように折り返さない */
+  .item button{white-space:nowrap}
   .ok{color:var(--ok);font-weight:700}
   .bad{color:var(--bad);font-weight:700}
   .big{font-size:1.25em;font-weight:700}
@@ -134,6 +136,15 @@
   @media(max-width:600px){
     html[data-fontsize="xlarge"] main{zoom:1.12}
     html[data-fontsize="large"] main{zoom:1.05}
+    /* v2.8: 狭幅でヘッダーが窮屈に折り返されるのを直す（メールアドレスは2段目へ） */
+    header{flex-wrap:wrap}
+    header .title{white-space:nowrap}
+    header .who{order:3;flex:1 1 100%;max-width:none}
+    header button{white-space:nowrap;flex:0 0 auto}
+    /* v2.8: 狭幅で一覧の行が潰れないようにする。本文は横幅いっぱい、
+       ボタンは下段に横並び（入りきらなければ自然に折り返す） */
+    .item{flex-wrap:wrap}
+    #theme-list .item .body,#fav-list .item .body,#later-list .item .body{flex:1 1 100%}
   }
 </style>
 </head>
@@ -322,10 +333,10 @@
     .hour-label-v26 { width: 3em; text-align: right; font-size: .9em; }
     .hour-track-v26 { flex: 1; background: #e5e7eb; border-radius: .4em; height: .9em; overflow: hidden; }
     .hour-fill-v26 { background: #4f7cff; height: 100%; }
-    .vague-badge-v26 { background: #f59e0b; color: #fff; border-radius: .4em; padding: 0 .35em; font-size: .78em; }
+    .vague-badge-v26 { background: #f59e0b; color: #fff; border-radius: .4em; padding: 0 .35em; font-size: .78em; display: inline-block; white-space: nowrap; }
     .theme-done-v26 { background: #f0fbf2; }
     /* v2.7: テーマ一覧の色分け・カレンダー */
-    .v27-badge { border-radius: .4em; padding: 0 .35em; font-size: .78em; color: #fff; }
+    .v27-badge { border-radius: .4em; padding: 0 .35em; font-size: .78em; color: #fff; display: inline-block; white-space: nowrap; }
     .v27-badge.st-untouched { background: #9aa3ad; }
     .v27-badge.st-doing { background: #e6a817; }
     .v27-badge.st-done { background: #2e9e4f; }
@@ -338,7 +349,10 @@
     .tcal-cell-v27.empty { border: 0; }
     .tcal-cell-v27.has-done { background: #f0fbf2; border-color: #2e9e4f; }
     .tcal-day-v27 { font-weight: bold; display: block; font-size: 1.1em; }
-    .tcal-item-v27 { display: block; color: #20713a; }
+    /* v2.9: カレンダーのマスには件数だけを出し、テーマ名は下の一覧に日付ごとに分けて出す */
+    .tcal-count-v29 { display: block; color: #20713a; white-space: nowrap; }
+    .tcal-date-v29 { margin: .9em 0 .3em; font-size: 1em; }
+    .tcal-list-item-v29 { margin: .2em 0 .2em .5em; }
   </style>
 
   <!-- 弱点ドリル（v2.6: PC版 v0.9.22 第1弾-1） -->
@@ -602,7 +616,7 @@
     <!-- v2.7（第3弾-3）: 終わったテーマの月別カレンダー -->
     <div class="panel">
       <h2>🗓️ 終わったテーマのカレンダー</h2>
-      <p class="muted">テーマの進み具合が初めて100%になった日を「終わった日」として印を付けたよ。</p>
+      <p class="muted">テーマの進み具合が初めて100%になった日を「終わった日」として印を付けたよ。カレンダーのマスには終わった件数だけを出して、テーマ名は下の一覧に日付ごとに分けて書いたよ。</p>
       <div class="row">
         <button class="secondary" id="tcal-prev-v27">← 前の月</button>
         <strong id="tcal-title-v27">—</strong>
@@ -700,6 +714,8 @@
     </div>
     <div class="panel">
       <h2>レポート</h2>
+      <!-- v2.9: テーマ一覧と同じ色分けの凡例 -->
+      <p class="muted">色の意味：<span class="v27-badge st-untouched">手つかず</span> 進み具合0% ／ <span class="v27-badge st-doing">途中</span> 進み具合1%以上 ／ <span class="v27-badge st-done">完了</span> 進み具合100%</p>
       <div id="plan-reports"></div>
     </div>
     <p class="muted">プランの変更は、パソコン版でできるよ（この画面は見るだけだよ）。</p>
@@ -807,6 +823,25 @@
 <script>
 "use strict";
 /* ============================================================
+   学習サポートAI（スマホ版）v2.9（月別カレンダーの見づらさ修正＋学習計画の色分け）
+   v2.9: 「終わったテーマの月別カレンダー」で、同じ日に何件も終わった日に
+   マスが縦に伸びてテーマ名が数文字ずつ折り返されて読めなくなる問題の修正。
+   カレンダーのマスには日付と終わった件数（✓ ○件）だけを出し、テーマ名は
+   下の一覧に日付ごとの見出しで分けて横幅いっぱいに表示するようにした。
+   あわせて、学習プラン画面のレポート一覧にも、テーマ一覧と同じ考え方の
+   色分け（完了＝緑／途中＝黄色／手つかず＝グレー、判定はレポート範囲テーマの
+   平均の進み具合）と凡例・状態バッジを付けた。
+   終わった日の求め方・進み具合の計算・機能・データの変更はなし
+   （見た目と表示場所のみ）。
+   学習サポートAI（スマホ版）v2.8（PC版 v0.9.23 対応・見づらさ修正）
+   v2.8: 狭い画面でテーマ一覧などの行が潰れて読めなくなる問題の修正。
+   狭幅（600px以下）では、テーマ一覧・お気に入り・あとで解くの一覧で
+   本文（テーマ名と説明）を横幅いっぱいにし、ボタンを下段に横並びに
+   した（入りきらなければ自然に折り返す）。バッジ（完了・手つかず・
+   あいまい等）とボタンの文字は途中で割れないようにした。ヘッダーは
+   メールアドレスを2段目に回し、タイトルとログアウトが窮屈に
+   折り返されるのを直した。広い画面の見た目は変更なし。
+   機能・データ・記録の変更はなし（見た目のみ）。
    学習サポートAI（スマホ版）v2.7（PC版 v0.9.23 対応）
    v2.7: PC版 v0.9.23（追加機能 第3弾・第4弾）に対応。模擬試験の履歴に
    科目ごとの弱点表示、ミミが今日のテーマを1つすすめる表示（ホーム）、
@@ -2955,7 +2990,12 @@ function renderPlan() {
         ? Math.round(progresses.reduce((a, x) => a + x, 0) / topics.length) : 0;
       const done = progresses.filter((x) => x >= 100).length;
       const div = document.createElement("div");
-      div.className = "item";
+      // v2.9: テーマ一覧と同じ考え方の色分け（レポート範囲テーマの平均の進み具合で判定）
+      const stateClsV29 = prog >= 100 ? " theme-status-done-v27" : prog >= 1 ? " theme-status-doing-v27" : " theme-status-untouched-v27";
+      const stateBadgeV29 = prog >= 100 ? "<span class='v27-badge st-done'>完了</span>"
+        : prog >= 1 ? "<span class='v27-badge st-doing'>途中</span>"
+        : "<span class='v27-badge st-untouched'>手つかず</span>";
+      div.className = "item" + stateClsV29;
       let detail = "範囲 " + topics.length + " テーマ中 " + done + " テーマ完了（進み具合 " + prog + "%）";
       if (r.submitted) detail += "｜提出済み";
       else if (r.deadline) {
@@ -2964,7 +3004,7 @@ function renderPlan() {
           (left < 0 ? "期限を過ぎています" : left === 0 ? "今日まで" : "あと" + left + "日") + "）";
       }
       div.innerHTML = "<div class='body'><strong>" + esc(r.name || "") + "（" + esc(r.subject) +
-        "）</strong><br><span class='muted'>" + esc(detail) + "</span></div>";
+        "）</strong> " + stateBadgeV29 + "<br><span class='muted'>" + esc(detail) + "</span></div>";
       repEl.appendChild(div);
     });
   }
@@ -4575,17 +4615,30 @@ function renderThemeCalendarV27() {
   for (let day = 1; day <= daysInMonth; day++) {
     const ds = y + "-" + String(m).padStart(2, "0") + "-" + String(day).padStart(2, "0");
     const items = days[ds] || [];
+    // v2.9: マスには日付と件数だけ（テーマ名を入れると件数が多い日にマスが伸びて読めなくなるため）
     html += "<div class='tcal-cell-v27" + (items.length ? " has-done" : "") + "'><span class='tcal-day-v27'>" +
-      day + "</span>" + items.map((tp) => "<span class='tcal-item-v27'>✓ " + esc(tp) + "</span>").join("") + "</div>";
+      day + "</span>" + (items.length ? "<span class='tcal-count-v29'>✓ " + items.length + "件</span>" : "") + "</div>";
   }
   grid.innerHTML = html;
   const list = $("tcal-list-v27");
   const all = [...done.entries()].map(([k, d]) => ({ d, label: k.replace("||", "／") }))
     .sort((a, b) => (a.d < b.d ? 1 : -1));
-  list.innerHTML = all.length
-    ? "<h3>終わったテーマの一覧（新しい順）</h3>" + all.map((c) =>
-        "<p><span class='muted'>" + esc(c.d) + "</span> " + esc(c.label) + "</p>").join("")
-    : "<p class='muted'>まだ終わったテーマはありません。進み具合が100%になると、ここに出るよ。</p>";
+  if (!all.length) {
+    list.innerHTML = "<p class='muted'>まだ終わったテーマはありません。進み具合が100%になると、ここに出るよ。</p>";
+  } else {
+    // v2.9: 日付ごとの見出しで分けて、テーマ名は横幅いっぱいで読める形にする
+    const groups = [];
+    for (const c of all) {
+      const g = groups[groups.length - 1];
+      if (g && g.d === c.d) g.items.push(c.label);
+      else groups.push({ d: c.d, items: [c.label] });
+    }
+    list.innerHTML = "<h3>終わったテーマの一覧（新しい順）</h3>" + groups.map((g) => {
+      const [gy, gm, gd] = g.d.split("-").map((x) => parseInt(x, 10));
+      return "<h4 class='tcal-date-v29'>" + gy + "年" + gm + "月" + gd + "日（" + g.items.length + "件）</h4>" +
+        g.items.map((label) => "<p class='tcal-list-item-v29'>✓ " + esc(label) + "</p>").join("");
+    }).join("");
+  }
 }
 function shiftTcalV27(delta) {
   if (!tcalMonthV27) tcalMonthV27 = todayJST().slice(0, 7);
