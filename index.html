@@ -642,7 +642,9 @@
 <script>
 "use strict";
 /* ============================================================
-   学習サポートAI（スマホ版）v1.7（PC版 v0.9.13 対応）
+   学習サポートAI（スマホ版）v1.8（PC版 v0.9.14 対応）
+   v1.8: 文学国語の文学史・知識寄り5テーマを削除（テーマ77・シード1,491問）。
+   要点カードのポイントに小さな図解（年表・関係図・仕組みの図）を追加（92件）。
    v1.6: 模擬試験の結果画面にも「この問題を出さない」ボタンを追加。
    シード問題 seed-rk-danraku-choice-1 の選択肢をPC版に合わせて更新。
    - AIなし。シード問題・用語カード・要点カードは同梱の静的データ。
@@ -1233,8 +1235,15 @@ function renderYotenCardInto(el, subject, topic) {
   const card = yotenCardFor(subject, topic);
   if (!card || !(card.points || []).length) { el.hidden = true; el.innerHTML = ""; return false; }
   el.innerHTML = "<div class='yc-title'>📌 " + esc(topic) + " の要点</div>" +
-    "<ol>" + card.points.map((p) =>
-      "<li><strong>" + esc(p.word) + "</strong>：" + esc(p.text) + "</li>").join("") + "</ol>";
+    "<ol>" + card.points.map((p, i) =>
+      "<li><strong>" + esc(p.word) + "</strong>：" + esc(p.text) +
+      (p.diagram ? "<span class='yc-diagram' data-diagram-idx='" + i + "'></span>" : "") + "</li>").join("") + "</ol>";
+  // v1.8: ポイントごとの図解（あれば各ポイントの下に差し込む）
+  card.points.forEach((p, i) => {
+    if (!p.diagram) return;
+    const slot = el.querySelector("[data-diagram-idx='" + i + "']");
+    if (slot) slot.appendChild(renderDiagram(p.diagram));
+  });
   el.hidden = false;
   return true;
 }
